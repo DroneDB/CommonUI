@@ -16,7 +16,12 @@
     "url": "https://github.com/DroneDB/CommonUI/issues"
   },
   "homepage": "https://github.com/DroneDB/CommonUI#readme",
-  "devDependencies": {
+  "dependencies": {
+    "@turf/bbox": "^6.0.1",
+    "@turf/meta": "^6.0.2",
+    "jsrsasign": "^8.0.23",
+    "ol": "^6.1.1",
+    "vue": "^2.6.11",
     "@babel/core": "^7.0.1",
     "@babel/plugin-transform-runtime": "^7.7.6",
     "@babel/preset-env": "^7.0.0",
@@ -35,12 +40,5 @@
     "vue-style-loader": "^4.1.0",
     "vue-template-compiler": "^2.5.16",
     "webpack": "^4.15.1"
-  },
-  "dependencies": {
-    "@turf/bbox": "^6.0.1",
-    "@turf/meta": "^6.0.2",
-    "jsrsasign": "^8.0.23",
-    "ol": "^6.1.1",
-    "vue": "^2.6.11"
   }
 }
