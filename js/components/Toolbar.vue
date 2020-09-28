@@ -1,0 +1,129 @@
+<template>
+    <div class="toolbar" :class="{'plain' : plainBackground}">
+        <template v-for="tool in dataTools">
+            <div class="button" 
+                    :class="{'selected': tool.selected}" 
+                    :title="tool.title"
+                    @click="toggleTool(tool.id)">
+                <i :class="'icon ' + tool.icon"></i>
+            </div>
+        </template>
+    </div>
+</template>
+
+<script>
+//<div class="button selected" title="Select Features by Area (SHIFT)"><i class="icon square outline"></i></div>
+        
+export default {
+  props: ["tools", "plainBackground"],
+  data: function(){
+      const dataTools = [];
+
+      // Make sure all keys are set for tools
+      (this.tools || []).forEach((t, idx) => {
+          dataTools.push({
+                  id: t.id || 'tool-' + idx,
+                  icon: t.icon,
+                  selected: t.selected || false,
+                  title: t.title || '',
+                  onClick: t.onClick || false,
+                  onSelect: t.onSelect || false,
+                  onDeselect: t.onDeselect || false,
+                  exclusiveGroup: t.exclusiveGroup,
+              });
+          
+      });
+
+      return { 
+          dataTools
+      };
+  },
+  mounted: function(){
+  },
+  methods: {
+      getTool: function(toolId){
+          return this.dataTools.find(t => t.id === toolId);
+      },
+
+      selectTool: function(toolId){
+          const tool = this.getTool(toolId);
+          if (tool.onClick){
+              tool.onClick();
+          }
+          
+          if (tool.onSelect){
+            tool.selected = true;
+            tool.onSelect();
+          }
+
+          if (tool.exclusiveGroup){
+              this.dataTools.forEach(t => {
+                  if (t !== tool && t.exclusiveGroup === tool.exclusiveGroup && t.selected){
+                      this.deselectTool(t.id);
+                  }
+              })
+          }
+      },
+
+      deselectTool: function(toolId){
+          const tool = this.getTool(toolId);
+          if (tool.onClick){
+              tool.onClick();
+          }
+
+          tool.selected = false;
+          if (tool.onDeselect){
+              tool.onDeselect();
+          }
+      },
+
+      deselectAll: function(){
+          this.dataTools.forEach(t => this.deselectTool(t.id));
+      },
+
+      toggleTool: function(toolId){
+          const tool = this.getTool(toolId);
+          
+          if (tool.selected) this.deselectTool(toolId);
+          else this.selectTool(toolId);
+      }
+  }
+}
+</script>
+
+<style scoped>
+.toolbar{
+    display: flex;
+    background-image: linear-gradient(#fefefe, #f3f3f3);
+    &.plain{
+        background: #fefefe;
+        border-bottom: 1px solid #030A03;
+    }
+    flex-direction: row;
+    padding: 4px;
+    min-height: 34px;
+    .button{
+        padding: 0;
+        width: 26px;
+        height: 26px;
+        padding-left: 4px;
+        padding-right: 4px;
+        border-radius: 4px;
+        margin-right: 1px;
+        border: 1px solid transparent;
+        &:hover,&:active,&:focus,&.selected{
+            cursor: pointer;
+            border-color: #030A03;
+            background: #fefefe;
+        }
+        &:active{
+            background: #f8f8f8;
+        }
+        i{
+            padding-top: 3px;
+            padding-left: 0px;
+            margin: 0;
+        }
+    }
+}
+</style>
