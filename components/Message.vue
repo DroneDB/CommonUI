@@ -1,8 +1,6 @@
 <template>
-    <div v-if="$parent[bindTo]" class="alert alert-dismissible show" :class="className" role="alert">
-        <button type="button" class="close" aria-label="Close">
-            <span aria-hidden="true" @click="dismiss">&times;</span>
-        </button>
+    <div v-if="$parent[bindTo]" class="ui message" :class="className">
+        <i class="close icon" @click="dismiss"></i>
         <span v-html="$parent[bindTo]" />
     </div>
 </template>
@@ -16,7 +14,7 @@ export default {
       },
       className: {
           type: String,
-          default: "alert-success"
+          default: "warning"
       }
   },
   methods: {

@@ -1,3 +1,3 @@
 import './css/main.scss';
-import './js/keyboard';
-import './js/mouse';
+import './keyboard';
+import './mouse';
