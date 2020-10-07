@@ -101,7 +101,7 @@ export default {
 
         return new Style({
             image: new CircleStyle({
-                radius: 9,
+                radius: 8,
                 fill: new Fill({
                     color: fill
                 }),
@@ -212,9 +212,9 @@ export default {
 
     this.map.on('click', e => {
         // Single selection
-        // if (this.selectSingle){
-        doSelectSingle(e);
-        // }
+        //if (this.selectSingle){
+            doSelectSingle(e);
+        //}
     });
 
     // Right click

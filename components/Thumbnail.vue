@@ -18,7 +18,7 @@
 
 <script>
 import { thumbs } from 'ddb';
-import path from 'path';
+import pathutils from '../classes/pathutils';
 import Mouse from '../mouse';
 import Keyboard from '../keyboard';
 
@@ -37,7 +37,7 @@ export default {
       }
   },
   data: function(){
-      let filename = path.basename(this.file.path);
+      let filename = pathutils.basename(this.file.path);
       if (filename === "") filename = this.file.path;
       
       return {

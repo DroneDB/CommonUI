@@ -16,7 +16,7 @@ import TreeNode from './TreeNode.vue';
 import ddb from 'ddb';
 import mfs from 'mfs';
 import { registerContextMenu, unregisterContextMenu } from 'menu';
-import path from 'path';
+import pathutils from '../classes/pathutils';
 import icons from '../classes/icons';
 
 export default {
@@ -49,30 +49,35 @@ export default {
           }]);
 
       const getChildren = async function(){
-        return (await ddb.parseFiles(this.path, {withHash: false, recursive: true, maxRecursionDepth: 1, stopOnError: false}))
-            .filter(entry => {
-                return path.basename(entry.path)[0] != "." // Hidden files/folders
-            })
-            .sort((a, b) => {
-                // Filename ascending
-                return path.basename(a.path.toLowerCase()) > path.basename(b.path.toLowerCase()) ? 1 : -1
-            })
-            .map(entry => {
-                return {
-                    icon : icons.getForType(entry.type),
-                    label: path.basename(entry.path),
-                    path: entry.path.substring("file://".length),
-                    getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
-                    selected: false,
-                    entry
-                }
-            });
+          try{
+            const entries = await ddb.info(this.path, {withHash: false, recursive: true, maxRecursionDepth: 1, stopOnError: false})
+            return entries.filter(entry => {
+                    return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
+                })
+                .sort((a, b) => {
+                    // Filename ascending
+                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                })
+                .map(entry => {
+                    return {
+                        icon : icons.getForType(entry.type),
+                        label: pathutils.basename(entry.path),
+                        path: entry.path.substring("file://".length),
+                        getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
+                        selected: false,
+                        entry
+                    }
+                });
+        }catch(e){
+            console.error(e);
+            return [];
+        }
       };
 
       const drives = await mfs.getDriveList();
       for (let i = 0; i < drives.length; i++){
           const d = drives[i];
-          const entry = await ddb.parseFile(d, {withHash: false});
+          const entry = (await ddb.info(d, {withHash: false}))[0];
           this.nodes.push({
               icon: "hdd outline", 
               label: d,
@@ -90,7 +95,7 @@ export default {
           path: homeDir,
           getChildren,
           selected: false,
-          entry: await ddb.parseFile(homeDir, {withHash: false})
+          entry: (await ddb.info(homeDir, {withHash: false}))[0]
       });
 
       this.loading = false;
@@ -101,6 +106,7 @@ export default {
   props: [],
   methods: {
       handleSelectionChanged: function(selectedNodes){
+          console.log(selectedNodes);
           // Keep track of nodes for "Open Item Location"
           if (selectedNodes.length > 0) this.lastSelectedNode = selectedNodes[selectedNodes.length - 1];
           else this.lastSelectedNode = null;
