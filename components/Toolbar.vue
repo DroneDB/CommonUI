@@ -1,8 +1,8 @@
 <template>
-    <div class="toolbar" :class="{'plain' : plainBackground}">
+    <div class="toolbar" :class="className" >
         <template v-for="tool in dataTools">
             <div class="button" 
-                    :class="{'selected': tool.selected}" 
+                    :class="{'selected': tool.selected, 'disabled': tool.disabled}" 
                     :title="tool.title"
                     @click="toggleTool(tool.id)">
                 <i :class="'icon ' + tool.icon"></i>
@@ -15,7 +15,7 @@
 //<div class="button selected" title="Select Features by Area (SHIFT)"><i class="icon square outline"></i></div>
         
 export default {
-  props: ["tools", "plainBackground"],
+  props: ["tools", "className"],
   data: function(){
       const dataTools = [];
 
@@ -25,6 +25,7 @@ export default {
                   id: t.id || 'tool-' + idx,
                   icon: t.icon,
                   selected: t.selected || false,
+                  disabled: t.disabled || false,
                   title: t.title || '',
                   onClick: t.onClick || false,
                   onSelect: t.onSelect || false,
@@ -47,6 +48,8 @@ export default {
 
       selectTool: function(toolId){
           const tool = this.getTool(toolId);
+          if (tool.disabled) return;
+
           if (tool.onClick){
               tool.onClick();
           }
@@ -67,6 +70,8 @@ export default {
 
       deselectTool: function(toolId){
           const tool = this.getTool(toolId);
+          if (tool.disabled) return;
+
           if (tool.onClick){
               tool.onClick();
           }
@@ -77,13 +82,19 @@ export default {
           }
       },
 
+      disableToolIf: function(toolId, disabled){
+          const tool = this.getTool(toolId);
+          tool.disabled = disabled;
+      },
+
       deselectAll: function(){
           this.dataTools.forEach(t => this.deselectTool(t.id));
       },
 
       toggleTool: function(toolId){
           const tool = this.getTool(toolId);
-          
+          if (tool.disabled) return;
+        
           if (tool.selected) this.deselectTool(toolId);
           else this.selectTool(toolId);
       }
@@ -124,6 +135,32 @@ export default {
             padding-left: 0px;
             margin: 0;
         }
+
+        &.disabled{
+            opacity: 0.2;
+            &:hover,&:active,&:focus,&.selected{
+                cursor: not-allowed;
+            }
+        }
+    }
+
+    &.large{
+        min-height: 44px;
+        .button{
+            width: 36px;
+            height: 36px;
+            padding-left: 2px;
+            padding-right: 2px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+        i{
+            font-size: 200%;
+        }
+    }
+
+    &.top-border{
+        border-top: 1px solid #030A03;
     }
 }
 </style>

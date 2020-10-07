@@ -84,6 +84,7 @@ export default {
               path: d,
               getChildren,
               selected: false,
+              root: true,
               entry
           });
       }
@@ -95,6 +96,7 @@ export default {
           path: homeDir,
           getChildren,
           selected: false,
+          root: true,
           entry: (await ddb.info(homeDir, {withHash: false}))[0]
       });
 
@@ -106,7 +108,6 @@ export default {
   props: [],
   methods: {
       handleSelectionChanged: function(selectedNodes){
-          console.log(selectedNodes);
           // Keep track of nodes for "Open Item Location"
           if (selectedNodes.length > 0) this.lastSelectedNode = selectedNodes[selectedNodes.length - 1];
           else this.lastSelectedNode = null;

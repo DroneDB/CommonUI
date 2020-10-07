@@ -1,5 +1,6 @@
 <template>
-    <div class="window" 
+<div class="window-container" :class="{modal}">
+    <div class="window"
         :style="winStyle"
         :id="id"
         :class="{dragging, resizing}"
@@ -16,6 +17,7 @@
             <slot/>
         </div>
     </div>
+</div>
 </template>
 
 <script>
@@ -40,6 +42,10 @@ export default {
       id:{
           type: String,
           required: true
+      },
+      modal:{
+          type: Boolean,
+          default: false
       }
   },
   data: function(){
@@ -70,7 +76,7 @@ export default {
       return { 
           winStyle,
           dragging: false,
-          resizing: false,
+          resizing: false
        };
   },
   mounted: function(){
@@ -161,7 +167,7 @@ export default {
               const w = window.innerWidth;
               const h = window.innerHeight;
               const cursor = this.winStyle.cursor;
-              
+
               let width = this.winStyle.width;
               let height = this.winStyle.height;
               let left = this.winStyle.left;
@@ -185,11 +191,11 @@ export default {
                   this.winStyle.height = height;
                   this.winStyle.left = left;
               }
-          }else if (Mouse.intersects(e, this.$el) && !this.fixedSize){
-            const left = this.$el.offsetLeft,
-                    right = left + this.$el.clientWidth,
-                    top = this.$el.offsetTop,
-                    bottom = top + this.$el.clientHeight;
+          }else if (Mouse.intersects(e, this.$refs.window) && !this.fixedSize){
+            const left = this.$refs.window.offsetLeft,
+                    right = left + this.$refs.window.clientWidth,
+                    top = this.$refs.window.offsetTop,
+                    bottom = top + this.$refs.window.clientHeight;
             const MARGIN = 12;
 
             const south = (bottom - e.clientY) < MARGIN && (bottom - e.clientY) > 0,
@@ -218,8 +224,8 @@ export default {
 .window{
     background: #fefefe;
     position: absolute;
-    z-index: 2;
-    border-radius: 2px;
+    z-index: 3;
+    border-radius: 4px;
     box-shadow: 1px 1px 4px -2px #030A03;
     overflow-y: auto;
     display: flex;
@@ -268,6 +274,18 @@ export default {
         flex-grow: 1;
         user-select: text;
         margin: 6px;
+    }
+}
+.window-container.modal{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 2;
+    .window{
+        box-shadow: 0px 0px 12px -2px #030A03
     }
 }
 </style>
