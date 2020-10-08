@@ -21,6 +21,23 @@ body{
     height: 17px;
     width: 22px;
 }
+
+.cui.select.icon{
+    position: relative;
+
+    select{
+        text-indent: 24px;
+    }
+
+    i{
+        position: absolute;
+        left: 13px;
+        z-index: 1;
+        top: 10px;
+        opacity: 0.5;
+        color: rgba(0,0,0,0.87);
+    }
+}
  
 @keyframes rotation {
     from {
