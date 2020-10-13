@@ -1,7 +1,7 @@
 <template>
-    <div v-if="$parent[bindTo]" class="ui message" :class="className">
+    <div v-if="parentRef[bindTo]" class="ui message" :class="className">
         <i class="close icon" @click="dismiss"></i>
-        <span v-html="$parent[bindTo]" />
+        <span v-html="parentRef[bindTo]" />
     </div>
 </template>
 
@@ -17,9 +17,23 @@ export default {
           default: "warning"
       }
   },
+  data: function(){
+      return {
+          parentRef: {}
+      }
+  },
+  beforeMount: function(){
+    // Traverse the Vue component tree until we find 
+    // a component with the bind property we need
+    let p = this.$parent;
+    while(p !== undefined && p[this.bindTo] === undefined){
+        p = p.$parent;
+    }
+    this.parentRef = p;
+  },
   methods: {
       dismiss: function(){
-          this.$parent[this.bindTo] = "";
+          this.parentRef[this.bindTo] = "";
       }
   }
 }
