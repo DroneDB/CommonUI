@@ -47,6 +47,16 @@ export default {
             type: 'separator'
         },
         {
+            label: "Share",
+            accelerator: "CmdOrCtrl+S",
+            click: () => {
+                if (this.selectedFiles.length > 0) dispatchEvent(new Event("btnShare_Click"));
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
             label: "Select All/None",
             accelerator: "CmdOrCtrl+A",
             click: () => {
