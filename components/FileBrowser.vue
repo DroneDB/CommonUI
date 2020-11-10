@@ -11,11 +11,12 @@
 <script>
 import TreeView from './TreeView.vue';
 import TreeNode from './TreeNode.vue';
-import ddb from 'ddb';
 import {
     registerContextMenu,
     unregisterContextMenu
 } from 'commonui/dynamic/menu';
+import shell from 'commonui/dynamic/shell';
+import ddb from 'ddb';
 import pathutils from '../classes/pathutils';
 import icons from '../classes/icons';
 
@@ -40,7 +41,7 @@ export default {
         registerContextMenu(this.$el, [{
             label: "Open Item Location",
             click: () => {
-                if (this.lastSelectedNode !== null) ddb.shell.showItemInFolder(this.lastSelectedNode.node.path);
+                if (this.lastSelectedNode !== null) shell.showItemInFolder(this.lastSelectedNode.node.path);
             }
         }, {
             type: 'separator'
@@ -54,43 +55,44 @@ export default {
             }
         }]);
 
-        const getChildren = async function () {
-            try {
-                const entries = await ddb.info(this.path, {
-                    withHash: false,
-                    recursive: true,
-                    maxRecursionDepth: 1,
-                    stopOnError: false
-                })
-                return entries.filter(entry => {
-                        return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
-                    })
-                    .sort((a, b) => {
-                        // Filename ascending
-                        return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
-                    })
-                    .map(entry => {
-                        return {
-                            icon: icons.getForType(entry.type),
-                            label: pathutils.basename(entry.path),
-                            path: entry.path.substring("file://".length),
-                            getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
-                            selected: false,
-                            entry
-                        }
-                    });
-            } catch (e) {
-                console.error(e);
-                return [];
-            }
-        };
-
         const rootNodes = await this.loadRootNodes();
 
         rootNodes.forEach(async n => {
-            const entry = (await ddb.info(n.path, {
+            const entry = (await n.walker(n.path, {
                 withHash: false
             }))[0];
+
+            const getChildren = async function () {
+                try {
+                    const entries = await n.walker(this.path, {
+                        withHash: false,
+                        recursive: true,
+                        maxRecursionDepth: 1,
+                        stopOnError: false
+                    });
+
+                    return entries.filter(entry => {
+                            return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
+                        })
+                        .sort((a, b) => {
+                            // Filename ascending
+                            return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                        })
+                        .map(entry => {
+                            return {
+                                icon: icons.getForType(entry.type),
+                                label: pathutils.basename(entry.path),
+                                path: entry.path.substring("file://".length),
+                                getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
+                                selected: false,
+                                entry
+                            }
+                        });
+                } catch (e) {
+                    console.error(e);
+                    return [];
+                }
+            };
 
             this.nodes.push({
                 icon: n.icon,
@@ -130,7 +132,7 @@ export default {
 
             // Open file in default program
             if (!ddb.entry.isDirectory(node.entry)) {
-                ddb.shell.openItem(node.path);
+                shell.openItem(node.path);
             } else {
                 // Select children of item
                 if (component.children && sender === "dblclick") {
