@@ -25,7 +25,7 @@ export default {
         TreeView
     },
     props: {
-        loadRootNodes: {
+        rootNodes: {
             type: Function,
             required: true
         }
@@ -55,7 +55,7 @@ export default {
             }
         }]);
 
-        const rootNodes = await this.loadRootNodes();
+        const rootNodes = await this.rootNodes();
 
         rootNodes.forEach(async n => {
             const entry = (await n.walker(n.path, {
