@@ -56,15 +56,10 @@ export default {
         }]);
 
         const rootNodes = await this.rootNodes();
-
         rootNodes.forEach(async n => {
-            const entry = (await n.walker(n.path, {
-                withHash: false
-            }))[0];
-
             const getChildren = async function () {
                 try {
-                    const entries = await n.walker(this.path, {
+                    const entries = await ddb.fetchEntries(this.path, {
                         withHash: false,
                         recursive: true,
                         maxRecursionDepth: 1,
@@ -79,30 +74,48 @@ export default {
                             return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
                         })
                         .map(entry => {
+                            const base = pathutils.basename(entry.path);
+
                             return {
                                 icon: icons.getForType(entry.type),
-                                label: pathutils.basename(entry.path),
-                                path: entry.path.substring("file://".length),
+                                label: base,
+                                path: pathutils.join(this.path, base),
                                 getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
                                 selected: false,
                                 entry
                             }
                         });
                 } catch (e) {
-                    console.error(e);
+                    if (e.message == "Unauthorized"){
+                        this.$emit('unauthorized');
+                    }else{
+                        console.error(e);
+                    }
                     return [];
                 }
             };
 
-            this.nodes.push({
-                icon: n.icon,
-                label: n.label,
-                path: n.path,
-                getChildren,
-                selected: false,
-                root: true,
-                entry
-            });
+            try{
+                const entry = (await ddb.fetchEntries(n.path, {
+                    withHash: false
+                }))[0];
+
+                this.nodes.push({
+                    icon: n.icon,
+                    label: n.label,
+                    path: n.path,
+                    getChildren,
+                    selected: false,
+                    root: true,
+                    entry
+                });
+            }catch(e){
+                if (e.message == "Unauthorized"){
+                    this.$emit('unauthorized');
+                }else{
+                    console.error(e);
+                }
+            }
         });
 
         this.loading = false;
