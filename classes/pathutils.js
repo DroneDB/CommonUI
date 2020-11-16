@@ -1,6 +1,11 @@
+const protoRegex = /^(file:\/\/|ddb:\/\/|ddb+unsafe:\/\/)/i;
+
 module.exports = {
     basename: function(path){
-        return path.split(/[\\/]/).pop();
+        const pathWithoutProto = path.replace(protoRegex, "");
+        const name = pathWithoutProto.split(/[\\/]/).pop();
+        if (name) return name;
+        else return pathWithoutProto;
     },
 
     join: function(...paths){

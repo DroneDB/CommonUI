@@ -56,7 +56,8 @@ export default {
         }]);
 
         const rootNodes = await this.rootNodes();
-        rootNodes.forEach(async n => {
+        for (let i = 0; i < rootNodes.length; i++){
+            const n = rootNodes[i];
             const getChildren = async function () {
                 try {
                     const entries = await ddb.fetchEntries(this.path, {
@@ -116,7 +117,7 @@ export default {
                     console.error(e);
                 }
             }
-        });
+        }
 
         this.loading = false;
     },
@@ -164,7 +165,7 @@ export default {
     }
 
     height: 100%;
-    max-width: 100%;
+    min-width: 100%;
     min-height: 100px;
 }
 </style>

@@ -99,7 +99,10 @@ export default {
 .tree-node{
     .entry{
         padding: 2px 4px 2px 4px;
-        display: flex;
+        display: inline-block;
+        white-space: nowrap;
+        min-width: 100%;
+
         &:hover{
             background: #eee;
             cursor: pointer;
@@ -113,12 +116,13 @@ export default {
     }
 
     i{
+        display: inline-block;
         margin-top: 1px;
         margin-right: 0px;
-        flex-shrink: 0;
     }
     .text{
-        margin-left: 6px;
+        display: inline-block;
+        margin-left: 2px;
         white-space: nowrap;
         word-break: keep-all;
     }

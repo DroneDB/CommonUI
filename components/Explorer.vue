@@ -9,10 +9,8 @@ import Thumbnail from './Thumbnail.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 
-import {
-    entry,
-    shell
-} from 'ddb';
+import { entry } from 'ddb';
+import shell from 'commonui/dynamic/shell';
 import {
     registerContextMenu,
     unregisterContextMenu
