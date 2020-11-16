@@ -97,7 +97,7 @@ export default {
             };
 
             try{
-                const entry = (await ddb.fetchEntries(n.path, {
+                const entry = n.entry || (await ddb.fetchEntries(n.path, {
                     withHash: false
                 }))[0];
 

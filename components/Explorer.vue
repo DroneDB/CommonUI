@@ -93,6 +93,7 @@ export default {
         },
         handleOpen: async function (thumb) {
             const file = thumb.file;
+
             if (entry.isDirectory(file.entry)) {
                 // Expand directory
                 // TODO: can we/should we cache results?

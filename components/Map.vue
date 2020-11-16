@@ -3,7 +3,7 @@
         @mouseover="setMouseInside(true)" 
         @mouseleave="setMouseInside(false)">
         <Toolbar :tools="tools" ref="toolbar" />
-        <div id="map-container" :class="{'cursor-pointer': selectSingle,
+        <div ref="map-container" class="map-container" :class="{'cursor-pointer': selectSingle,
                                          'cursor-crosshair': selectArea}"/>
     </div>
 </template>
@@ -180,7 +180,7 @@ export default {
     });
 
     this.map = new Map({
-        target: 'map-container',
+        target: this.$refs['map-container'],
         layers: [
             new TileLayer({
                 source: new OSM()
@@ -225,6 +225,10 @@ export default {
 
     Keyboard.onKeyDown(this.handleKeyDown);
     Keyboard.onKeyUp(this.handleKeyUp);
+
+    // Redraw, otherwise openlayers does not draw
+    // the map correctly
+    setTimeout(() => this.map.updateSize(), 1);
   },
   destroyed: function(){
     Keyboard.offKeyDown(this.handleKeyDown);
@@ -364,10 +368,7 @@ export default {
     display: flex;
     flex-direction: column;
 }
-#map-toolbar{
-    padding-left: 7px;
-}
-#map-container{
+.map-container{
     width: 100%;
     height: 100%;
 
