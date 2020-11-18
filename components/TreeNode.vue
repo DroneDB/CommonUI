@@ -47,6 +47,11 @@ export default {
           expanded: false,
       }
   },
+  mounted: function(){
+      if (this.node.expanded){
+          this.handleOpenDblClick(new CustomEvent('click'));
+      }
+  },
   methods: {
       onClick: function(e){
           Keyboard.updateState(e);

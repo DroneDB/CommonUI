@@ -107,6 +107,7 @@ export default {
                     path: n.path,
                     getChildren,
                     selected: false,
+                    expanded: !!n.expanded,
                     root: true,
                     entry
                 });
