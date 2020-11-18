@@ -97,7 +97,7 @@ export default {
           this.winStyle.visibility = "";
       }
   },
-  destroyed: function(){
+  unmounted: function(){
       Mouse.off("mouseup", this.mouseUp);
       Mouse.off("mousedown", this.mouseDown);
       Mouse.off("mousemove", this.mouseMove);
