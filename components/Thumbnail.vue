@@ -57,9 +57,8 @@ export default {
   },
   mounted: async function(){
       try{
-          // Only file:// protocol is supported
-          if (this.file.entry.path.startsWith("file://") && thumbs.supportedForType(this.file.entry.type)){
-            this.thumbnail = await thumbs.getFromUserCache(this.file.entry.path.substring("file://".length), this.file.entry.mtime, { thumbSize: this.size });
+          if (thumbs.supportedForType(this.file.entry.type)){
+            this.thumbnail = await thumbs.fetch(this.file.path);
           }else{
             this.icon = this.file.icon;
           }
