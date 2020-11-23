@@ -17,8 +17,7 @@
 </template>
 
 <script>
-import { thumbs } from 'ddb';
-import pathutils from '../classes/pathutils';
+import { thumbs, pathutils } from 'ddb';
 import Mouse from '../mouse';
 import Keyboard from '../keyboard';
 

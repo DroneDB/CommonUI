@@ -17,7 +17,7 @@ import {
 } from 'commonui/dynamic/menu';
 import shell from 'commonui/dynamic/shell';
 import ddb from 'ddb';
-import pathutils from '../classes/pathutils';
+const { pathutils} = ddb;
 import icons from '../classes/icons';
 
 export default {

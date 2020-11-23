@@ -230,7 +230,7 @@ export default {
     // the map correctly
     setTimeout(() => this.map.updateSize(), 1);
   },
-  unmounted: function(){
+  beforeDestroy: function(){
     Keyboard.offKeyDown(this.handleKeyDown);
     Keyboard.offKeyUp(this.handleKeyUp);
   },

@@ -39,6 +39,10 @@ export default {
           type: Boolean,
           default: false
       },
+      maxWidth:{
+          type: String,
+          default: "auto"
+      },
       id:{
           type: String,
           required: true
@@ -66,6 +70,7 @@ export default {
       if (this.fixedSize){
           winStyle.width = "auto";
           winStyle.height = "auto";
+          winStyle.maxWidth = this.maxWidth;
           winStyle.visibility = "hidden";
           winStyle.left = winStyle.top = winStyle.bottom = winStyle.right = "";
       }
@@ -97,7 +102,7 @@ export default {
           this.winStyle.visibility = "";
       }
   },
-  unmounted: function(){
+  beforeDestroy: function(){
       Mouse.off("mouseup", this.mouseUp);
       Mouse.off("mousedown", this.mouseDown);
       Mouse.off("mousemove", this.mouseMove);
