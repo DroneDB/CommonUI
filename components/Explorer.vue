@@ -75,7 +75,7 @@ export default {
             }
         ]);
     },
-    unmounted: function () {
+    beforeDestroy: function () {
         unregisterContextMenu(this.$el);
     },
     methods: {

@@ -2,8 +2,8 @@ let shiftPressed = false;
 let ctrlPressed = false;
 let metaPressed = false;
 
-const keyDownListeners = [];
-const keyUpListeners = [];
+let keyDownListeners = [];
+let keyUpListeners = [];
 
 const api = {
     onKeyDown: function(listener){

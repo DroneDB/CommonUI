@@ -122,7 +122,7 @@ export default {
 
         this.loading = false;
     },
-    unmounted: function () {
+    beforeDestroy: function () {
         unregisterContextMenu(this.$el);
     },
     methods: {
