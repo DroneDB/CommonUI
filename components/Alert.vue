@@ -54,6 +54,7 @@ export default {
 
 <style scoped>
 .buttons{
+    margin-top: 16px;
     text-align: center;
 }
 </style>
