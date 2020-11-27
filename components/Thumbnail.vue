@@ -112,6 +112,7 @@ export default {
             padding-right: 8px;
             padding-left: 8px;
             max-width: 100%;
+            max-height: 100%;
         }
         margin-bottom: 4px;
         i.icon-file{
