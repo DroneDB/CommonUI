@@ -71,8 +71,16 @@ export default {
                             return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
                         })
                         .sort((a, b) => {
-                            // Filename ascending
-                            return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                            // Folders first
+                            let aDir = ddb.entry.isDirectory(a);
+                            let bDir = ddb.entry.isDirectory(b);
+
+                            if (aDir && !bDir) return -1;
+                            else if (!aDir && bDir) return 1;
+                            else {
+                                // then filename ascending
+                                return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                            }
                         })
                         .map(entry => {
                             const base = pathutils.basename(entry.path);
