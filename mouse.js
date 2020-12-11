@@ -26,6 +26,16 @@ export default {
                 mouseEvent.clientY <= bottom);
     },
 
+    setCursor: function(cursor = "auto"){
+        window.document.body.style.cursor = cursor;
+    },
+
+    clearCursor: function(prevCursor = "auto"){
+        if (window.document.body.style.cursor === prevCursor){
+            window.document.body.style.cursor = "auto";
+        }
+    },
+
     LEFT: 1,
     RIGHT: 3,
 };

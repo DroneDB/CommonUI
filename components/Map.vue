@@ -229,6 +229,11 @@ export default {
     // Redraw, otherwise openlayers does not draw
     // the map correctly
     setTimeout(() => this.map.updateSize(), 1);
+
+    // Redraw when map is resized (via panels)
+    this.$el.addEventListener('resized', () => {
+        this.map.updateSize();
+    });
   },
   beforeDestroy: function(){
     Keyboard.offKeyDown(this.handleKeyDown);

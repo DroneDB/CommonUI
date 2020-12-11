@@ -145,7 +145,7 @@ export default {
     }
 
     &.large{
-        min-height: 44px;
+        height: 44px;
         .button{
             width: 36px;
             height: 36px;
