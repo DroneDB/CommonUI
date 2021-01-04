@@ -141,6 +141,9 @@ export default {
                 Mouse.clearCursor(this.split === "vertical" ? "ew-resize" : "ns-resize");
             }
             
+          }else if (this.canResize){
+            this.canResize = false;
+            Mouse.clearCursor(this.split === "vertical" ? "ew-resize" : "ns-resize");
           }
       }
     },
