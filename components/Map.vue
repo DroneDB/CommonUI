@@ -27,7 +27,6 @@ import Point from 'ol/geom/Point';
 
 import ddb from 'ddb';
 import HybridXYZ from '../classes/olHybridXYZ';
-import XYZ from 'ol/source/XYZ';
 import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
@@ -309,8 +308,9 @@ export default {
                 rasters.push(new TileLayer({
                     extent, 
                     source: new HybridXYZ({
-                        url: f.entry.path,
-                        tileSize: 512,
+                        url: f.path,
+                        tileSize: 256,
+                        transition: 0, // TODO: why transitions don't work?
                         minZoom: 14,
                         maxZoom: 22
                         // TODO: get min/max zoom from file
