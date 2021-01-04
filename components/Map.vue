@@ -271,9 +271,9 @@ export default {
           if (this.fileFeatures.getFeatures().length){
             extendExtent(ext, this.fileFeatures.getExtent());
           }
-          if (this.rasterLayers.getLayers().length){
-            extendExtent(ext, this.rasterLayers.getExtent());
-          }
+          this.rasterLayers.getLayers().forEach(layer => {
+              extendExtent(ext, layer.getExtent());
+          });
           return ext;
       },
       clearLayerGroup: function(layerGroup){
@@ -306,7 +306,6 @@ export default {
                 });
             }else if (f.entry.type === ddb.entry.type.GEORASTER){
                 const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
-                
                 rasters.push(new TileLayer({
                     extent, 
                     source: new HybridXYZ({
