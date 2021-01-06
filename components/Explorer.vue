@@ -116,25 +116,20 @@ export default {
         },
         handleSelection: function (thumb, mouseBtn) {
             if (!thumb) return; // Top
-            if (mouseBtn === Mouse.RIGHT && this.selectedFiles.length > 1) return; // Prevent accidental deselection
+            // if (mouseBtn === Mouse.RIGHT && this.selectedFiles.length > 1) return; // Prevent accidental deselection
             const file = thumb.file;
 
-            // Multiple selection
-            if (Keyboard.isCtrlPressed()) {
-                file.selected = !file.selected;
-            } else if (Keyboard.isShiftPressed() && this.selectedFiles.length > 0 && this.rangeStartThumb) {
+            if (Keyboard.isShiftPressed() && this.selectedFiles.length > 0 && this.rangeStartThumb) {
                 // Range selection
                 this.selectedFiles.forEach(f => f.selected = false);
                 this.selectRange(this.rangeStartThumb, thumb, this.$refs.thumbs);
             } else {
                 // Single selection
-                if (!file.selected || this.selectedFiles.length > 1) {
-                    this.selectedFiles.forEach(f => f.selected = false);
-                    file.selected = true;
-                } else if (!mouseBtn === Mouse.RIGHT) { // Do not deselect with mouse right
-                    this.selectedFiles.forEach(f => f.selected = false);
+                if (mouseBtn === Mouse.RIGHT) {
+                    if (!file.selected) this.selectedFiles.forEach(f => f.selected = false);
                     file.selected = false;
                 }
+                file.selected = !file.selected;
                 this.rangeStartThumb = thumb;
             }
         },
@@ -170,6 +165,7 @@ export default {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
+    align-content: flex-start;
     width: 100%;
     height: 100%;
     padding: 8px;
