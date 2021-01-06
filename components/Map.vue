@@ -211,9 +211,9 @@ export default {
 
     this.map.on('click', e => {
         // Single selection
-        //if (this.selectSingle){
+        if (this.selectSingle){
             doSelectSingle(e);
-        //}
+        }
     });
 
     // Right click
@@ -276,7 +276,8 @@ export default {
           return ext;
       },
       clearLayerGroup: function(layerGroup){
-        for (var j = 0; j < layerGroup.getLayers().getLength(); j++) {
+        let count = layerGroup.getLayers().getLength();
+        for (var j = 0; j < count; j++) {
             let layer = layerGroup.getLayers().pop();
             layer = {};
         }

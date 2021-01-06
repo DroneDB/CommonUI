@@ -9,6 +9,10 @@ body{
     overflow: hidden;
 }
 
+*{
+    user-select: none;
+}
+
 .hide{
     display: none !important;
 }
