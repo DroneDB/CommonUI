@@ -1,4 +1,4 @@
 module.exports = {
-    openItem: function(path){ return window.__shell.openItem(path) },
-    showItemInFolder: function(path){ return window.__shell.showItemInFolder(path) }
+    openItem: function(uri){ return window.__shell.openItem(uri) },
+    showItemInFolder: function(uri){ return window.__shell.showItemInFolder(uri) }
 }

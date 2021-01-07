@@ -14,16 +14,18 @@ import {Map, View} from 'ol';
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from 'ol/layer';
 import {OSM, Vector as VectorSource, Cluster} from 'ol/source';
 import {defaults as defaultControls, Control} from 'ol/control';
+import Select from 'ol/interaction/Select';
 import Collection from 'ol/Collection';
 import {DragBox} from 'ol/interaction';
 import {createEmpty as createEmptyExtent, isEmpty as isEmptyExtent, extend as extendExtent} from 'ol/extent';
 import {transformExtent} from 'ol/proj';
 
-import GeoJSON from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
-import { coordEach } from '@turf/meta';
+import { coordEach, coordAll } from '@turf/meta';
 import bbox from '@turf/bbox';
 import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
+import { fromExtent } from 'ol/geom/Polygon';
 
 import ddb from 'ddb';
 import HybridXYZ from '../classes/olHybridXYZ';
@@ -114,7 +116,7 @@ export default {
     };
 
     this.styles = {
-        'shot': feats => {
+        shot: feats => {
             let styleId = `_shot-${feats.length}`;
             let selected = false;
             for (let i = 0; i < feats.length; i++){
@@ -132,7 +134,20 @@ export default {
             }
 
             return this.styles[styleId];
-        }
+        },
+
+        outline: new Style({
+            stroke: new Stroke({
+                color: 'rgba(253, 226, 147, 1)',
+                width: 6
+            })
+        }),
+
+        invisible: new Style({
+            fill: new Fill({
+                color: 'rgba(0, 0, 0, 0)'
+            })
+        })
     };
 
     this.fileFeatures = new VectorSource();
@@ -149,7 +164,19 @@ export default {
             else return s;
         }
     });
-    this.rasterLayers = new LayerGroup();
+    this.rasterLayer = new LayerGroup();
+
+    this.extentsFeatures = new VectorSource();
+    this.extentLayer = new VectorLayer({
+        source: this.extentsFeatures,
+        style: this.styles.invisible
+    });
+
+    this.outlineFeatures = new VectorSource();
+    this.outlineLayer = new VectorLayer({
+        source: this.outlineFeatures,
+        style: this.styles.outline
+    });
 
 
     this.dragBox = new DragBox({minArea: 0});
@@ -184,7 +211,9 @@ export default {
             new TileLayer({
                 source: new OSM()
             }),
-            this.rasterLayers,
+            this.rasterLayer,
+            this.extentLayer,
+            this.outlineLayer,
             this.fileLayer,
         ],
         view: new View({
@@ -221,6 +250,14 @@ export default {
         // Single selection
         doSelectSingle(e);
     });
+
+    // Single click
+    const singleClick = new Select({
+        style: null, // Do not change style on click
+        layers: [this.fileLayer, this.extentLayer]
+    });
+    singleClick.on('select', this.handleSingleClick);
+    this.map.addInteraction(singleClick);
 
     Keyboard.onKeyDown(this.handleKeyDown);
     Keyboard.onKeyUp(this.handleKeyUp);
@@ -270,7 +307,7 @@ export default {
           if (this.fileFeatures.getFeatures().length){
             extendExtent(ext, this.fileFeatures.getExtent());
           }
-          this.rasterLayers.getLayers().forEach(layer => {
+          this.rasterLayer.getLayers().forEach(layer => {
               extendExtent(ext, layer.getExtent());
           });
           return ext;
@@ -287,10 +324,11 @@ export default {
       },
       reloadFileLayers: function(){
         this.fileFeatures.clear();
-        this.clearLayerGroup(this.rasterLayers);
+        this.outlineFeatures.clear();
+        this.clearLayerGroup(this.rasterLayer);
 
         const features = [];
-        const rasters = this.rasterLayers.getLayers();
+        const rasters = this.rasterLayer.getLayers();
 
         // Create features, add them to map
         this.files.forEach(f => {
@@ -317,6 +355,10 @@ export default {
                         // TODO: get min/max zoom from file
                     })
                 }));
+
+                this.extentsFeatures.addFeature(
+                    new Feature(fromExtent(extent))
+                );
             }
         });
 
@@ -357,6 +399,44 @@ export default {
             }
             this.$refs.toolbar.deselectTool('select-features');
         }
+      },
+      handleSingleClick: function(e){
+          // We're selecting
+          if (this.selectSingle) return;
+
+          this.outlineFeatures.forEachFeature(outline => {
+                // Remove?
+                this.outlineFeatures.removeFeature(outline);
+                delete(outline.feat.outline);
+          });
+
+          // TODO: handle toggle
+
+          e.selected.forEach(feat => {
+            //TODO: highlight point features to #fde293 ?
+            if (!feat.outline){
+                let outline = null;
+
+                if (feat.values_.features){
+                    // Geoimage (point)
+                    const file = feat.values_.features[0].file;
+                    if (file.entry.polygon_geom){
+                        const coords = coordAll(file.entry.polygon_geom);
+                        outline = new Feature(new Polygon([coords]));
+                        outline.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+                    }
+                }else{
+                    // Extent
+                    outline = feat;
+                }
+
+                this.outlineFeatures.addFeature(outline);
+
+                // Add reference to self (for deletion later)
+                outline.feat = feat;
+                feat.outline = outline;
+            }
+          });
       },
       clearSelection: function(){
           this.files.forEach(f => f.selected = false);
