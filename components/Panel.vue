@@ -116,7 +116,7 @@ export default {
                 this.panel0Style.height = height + '%';
                 this.panel1Style.height = (100 - height) + '%';
               }
-          }else if (e.target.parentElement === this.$el || (e.target.parentElement || {}).parentElement === this.$el){
+          }else if (e.target === this.$el || e.target.parentElement === this.$el || (e.target.parentElement || {}).parentElement === this.$el){
             const left = this.$el.children[0].offsetLeft,
                     right = left + this.$el.children[0].clientWidth,
                     top = this.$el.children[0].offsetTop,
