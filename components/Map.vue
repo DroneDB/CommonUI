@@ -296,6 +296,7 @@ export default {
                 }else{
                     // Just update (selection change)
                     this.fileLayer.changed();
+                    this.updateRastersOpacity();
                 }
             }, 5);
         }
@@ -344,7 +345,7 @@ export default {
                 });
             }else if (f.entry.type === ddb.entry.type.GEORASTER){
                 const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
-                rasters.push(new TileLayer({
+                const tileLayer = new TileLayer({
                     extent, 
                     source: new HybridXYZ({
                         url: f.path,
@@ -354,7 +355,9 @@ export default {
                         maxZoom: 22
                         // TODO: get min/max zoom from file
                     })
-                }));
+                });
+                tileLayer.file = f;
+                rasters.push(tileLayer);
 
                 this.extentsFeatures.addFeature(
                     new Feature(fromExtent(extent))
@@ -375,6 +378,8 @@ export default {
                 });
             }, 10);
         }
+
+        this.updateRastersOpacity();
       },
       handleKeyDown: function(){
         if (Keyboard.isCtrlPressed() && this.mouseInside){
@@ -440,6 +445,12 @@ export default {
       },
       clearSelection: function(){
           this.files.forEach(f => f.selected = false);
+      },
+      updateRastersOpacity: function(){
+          this.rasterLayer.getLayers().forEach(layer => {
+              if (layer.file.selected) layer.setOpacity(0.8);
+              else layer.setOpacity(1.0);
+          });
       }
   }
 }

@@ -35,7 +35,7 @@ function genTileDDBLoadFunction(ddbUri, minZoom){
         tile.setState(TileState.LOADING);
         const { tileCoord } = tile;
         let [ tz, tx, ty ] = tileCoord;
-    
+
         if (minZoom !== undefined && tz < minZoom){
             // Do not load this one
             tile.setState(TileState.EMPTY);
