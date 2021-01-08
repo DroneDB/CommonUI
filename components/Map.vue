@@ -189,6 +189,7 @@ export default {
         source: this.outlineFeatures,
         style: this.styles.outline
     });
+    this.footprintRastersLayer = new LayerGroup();
 
 
     this.dragBox = new DragBox({minArea: 0});
@@ -227,6 +228,7 @@ export default {
                 source: new OSM()
             }),
             this.rasterLayer,
+            this.footprintRastersLayer,
             this.extentLayer,
             this.outlineLayer,
             this.fileLayer,
@@ -433,6 +435,7 @@ export default {
           // We're selecting
           if (this.selectSingle) return;
 
+          // Remove all
           this.outlineFeatures.forEachFeature(outline => {
                 this.outlineFeatures.removeFeature(outline);
                 
@@ -445,7 +448,9 @@ export default {
 
                 delete(outline.feat.outline);
           });
-
+          this.clearLayerGroup(this.footprintRastersLayer);
+        
+          // Add selected
           e.selected.forEach(feat => {
             if (!feat.outline){
                 let outline = null;
@@ -463,6 +468,21 @@ export default {
                     feat.get('features').forEach(f => {
                         f.style = 'shot-outlined';
                     });
+
+                    // Add geoprojected raster footprint
+                    const rasterFootprint = new TileLayer({
+                        extent: outline.getGeometry().getExtent(), 
+                        source: new HybridXYZ({
+                            url: file.path,
+                            tileSize: 256,
+                            transition: 0, // TODO: why transitions don't work?
+                            minZoom: 14,
+                            maxZoom: 22
+                            // TODO: get min/max zoom somehow?
+                        })
+                    });
+                    // tileLayer.file = f;
+                    this.footprintRastersLayer.getLayers().push(rasterFootprint);
                 }else{
                     // Extent
                     outline = feat;
