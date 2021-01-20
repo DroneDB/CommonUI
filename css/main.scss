@@ -73,66 +73,6 @@ body{
         height: 100%;
         border-right: 1px solid #030A03;
     }
-
-    .tab-switcher {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        overflow: hidden;
-
-        .tabs {
-            height: 100%;
-            overflow: hidden;
-    
-            .tab {
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-                overflow: auto;
-            }
-        }
-
-        .buttons{
-            margin-top: auto;
-            display: flex;
-    
-            .tab-button {
-                padding: 8px;
-                text-align: center;
-    
-                background-color: #eee;
-    
-                &:first-child {
-                    box-shadow: inset -3px 3px 3px -3px;
-                    border-top: 1px solid #000;
-                    border-right: 1px solid #000;
-                }
-    
-                flex-grow: 1;
-
-                &:last-child {
-                    box-shadow: inset 3px 3px 3px -3px;
-                    border-top: 1px solid #000;
-                    border-left: 1px solid #000;
-                }
-    
-                &:hover {
-                    cursor: pointer;
-                    background-color: #dadada;
-                }
-    
-                &.active {
-                    box-shadow: none;
-                    border: none;
-                    background-color: #fefefe;
-    
-                    &:hover {
-                        cursor: default;
-                    }
-                }
-            }
-        }
-    }
 }
  
 @keyframes rotation {

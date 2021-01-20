@@ -225,15 +225,17 @@ export default {
     const doSelectSingle = e => {
         this.map.forEachFeatureAtPixel(e.pixel, cluster => {
             const feats = cluster.get('features');
-            let selected = false;
-            for (let i = 0; i < feats.length; i++){
-                if (feats[i].file && feats[i].file.selected){
-                    selected = true;
-                    break;
+            if (feats){
+                let selected = false;
+                for (let i = 0; i < feats.length; i++){
+                    if (feats[i].file && feats[i].file.selected){
+                        selected = true;
+                        break;
+                    }
                 }
-            }
-            for (let i = 0; i < feats.length; i++){
-                if (feats[i].file) feats[i].file.selected = !selected;
+                for (let i = 0; i < feats.length; i++){
+                    if (feats[i].file) feats[i].file.selected = !selected;
+                }
             }
         });
     };

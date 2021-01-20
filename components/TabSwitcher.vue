@@ -1,26 +1,53 @@
 <template>
 <div class="tab-switcher">
+    <TabButtons :tabs="dynTabs"
+                :defaultTab="activeTab"
+                :position="position"
+                :buttonWidth="buttonWidth"
+                v-if="position === 'top' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab" />
     <div class="tabs">
-        <div class="tab" v-for="t in tabs" :class="{hide: t.key !== activeTab}">
+        <div class="tab" v-for="t in dynTabs" :class="{hide: t.key !== activeTab}">
             <slot :name="t.key" />
         </div>
     </div>
-    <div class="buttons">
-        <div v-for="t in tabs" class="tab-button" :class="{ active: activeTab === t.key }" @click="setActiveTab(t)">
-            <i class="icon" :class="t.icon" /> {{ t.label }}
-        </div>
-    </div>
+    <TabButtons :tabs="dynTabs"
+                :defaultTab="activeTab"
+                :position="position"
+                :buttonWidth="buttonWidth"
+                v-if="position === 'bottom' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab"/>
 </div>
 </template>
 
 <script>
+import { clone } from '../classes/utils';
+import TabButtons from './TabButtons';
+
 export default {
   components: {
+      TabButtons
   },
-  props: ['tabs'],
+  props: {
+      tabs: {
+          type: Array,
+          required: true
+      },
+      hideSingle: {
+          type: Boolean,
+          default: false
+      },
+      position: {
+          type: String,
+          default: "bottom" // one of "bottom", "top"
+      },
+      buttonWidth: {
+          type: String,
+          default: "expand" // one of "expand", "auto"
+      }
+  },
   data: function(){
       return {
-          activeTab: (this.tabs[0] || {}).key
+          activeTab: this.tabs[0].key,
+          dynTabs: clone(this.tabs)
       };
   },
   mounted: function(){
@@ -28,10 +55,45 @@ export default {
   methods: {
       setActiveTab: function(tab){
           this.activeTab = tab.key;
+      },
+
+      addTab: function(tab, activate = true){
+          const node = this.$createElement(tab.component, { props: { user: "PIERO" }});
+          this.$slots[tab.key] = [node];
+
+          this.dynTabs.push({
+                label: tab.label,
+                icon: tab.icon,
+                key: tab.key
+          });
+
+          if (activate){
+            this.setActiveTab(tab);
+            this.$forceUpdate();
+          }
       }
   }
 }
 </script>
 
 <style scoped>
+.tab-switcher{
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+
+    .tabs {
+        height: 100%;
+        overflow: hidden;
+
+        .tab {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: auto;
+        }
+    }
+
+}
 </style>
