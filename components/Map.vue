@@ -119,6 +119,7 @@ export default {
         shot: feats => {
             let styleId = `_shot-${feats.length}`;
             let selected = false;
+
             for (let i = 0; i < feats.length; i++){
                 if (feats[i].file && feats[i].file.selected){
                     styleId = `_shot-selected-${feats.length}`;
@@ -131,6 +132,17 @@ export default {
             if (!this.styles[styleId]){
                 if (selected) this.styles[styleId] = genShotStyle('rgba(255, 158, 103, 1)', 'rgba(252, 252, 255, 1)', feats.length);
                 else this.styles[styleId] = genShotStyle('rgba(75, 150, 243, 1)', 'rgba(252, 252, 255, 1)', feats.length);
+            }
+
+            return this.styles[styleId];
+        },
+
+        'shot-outlined': feats => {
+            let styleId = `_shot-outlined-${feats.length}`;
+
+            // Memoize
+            if (!this.styles[styleId]){
+                this.styles[styleId] = genShotStyle('rgba(253, 226, 147, 1)', 'rgba(252, 252, 255, 1)', feats.length);
             }
 
             return this.styles[styleId];
@@ -177,6 +189,7 @@ export default {
         source: this.outlineFeatures,
         style: this.styles.outline
     });
+    this.footprintRastersLayer = new LayerGroup();
 
 
     this.dragBox = new DragBox({minArea: 0});
@@ -185,8 +198,11 @@ export default {
 
         // Select (default) or deselect (if all features are previously selected)
         const intersect = [];
-        this.fileFeatures.forEachFeatureIntersectingExtent(extent, feat => {
-            intersect.push(feat);
+
+        [this.fileFeatures, this.extentsFeatures].forEach(layer => {
+            layer.forEachFeatureIntersectingExtent(extent, feat => {
+                intersect.push(feat);
+            });
         });
 
         let deselect = false;
@@ -212,6 +228,7 @@ export default {
                 source: new OSM()
             }),
             this.rasterLayer,
+            this.footprintRastersLayer,
             this.extentLayer,
             this.outlineLayer,
             this.fileLayer,
@@ -223,9 +240,16 @@ export default {
     });
 
     const doSelectSingle = e => {
-        this.map.forEachFeatureAtPixel(e.pixel, cluster => {
-            const feats = cluster.get('features');
+        let first = true;
+
+        this.map.forEachFeatureAtPixel(e.pixel, feat => {
+            // Only select the first entry
+            if (!first) return;
+            first = false;
+
+            const feats = feat.get('features');
             if (feats){
+                // Geoimage point cluster
                 let selected = false;
                 for (let i = 0; i < feats.length; i++){
                     if (feats[i].file && feats[i].file.selected){
@@ -233,9 +257,13 @@ export default {
                         break;
                     }
                 }
+
                 for (let i = 0; i < feats.length; i++){
                     if (feats[i].file) feats[i].file.selected = !selected;
                 }
+            }else{
+                // Extents selection
+                if (feat.file) feat.file.selected = !feat.file.selected;
             }
         });
     };
@@ -255,8 +283,9 @@ export default {
 
     // Single click
     const singleClick = new Select({
-        style: null, // Do not change style on click
-        layers: [this.fileLayer, this.extentLayer]
+        style: null, // We'll handle styling ourselves :/
+        layers: [this.fileLayer, this.extentLayer],
+        toggleCondition: () => false
     });
     singleClick.on('select', this.handleSingleClick);
     this.map.addInteraction(singleClick);
@@ -298,6 +327,7 @@ export default {
                 }else{
                     // Just update (selection change)
                     this.fileLayer.changed();
+                    this.updateRastersOpacity();
                 }
             }, 5);
         }
@@ -346,7 +376,7 @@ export default {
                 });
             }else if (f.entry.type === ddb.entry.type.GEORASTER){
                 const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
-                rasters.push(new TileLayer({
+                const tileLayer = new TileLayer({
                     extent, 
                     source: new HybridXYZ({
                         url: f.path,
@@ -356,11 +386,15 @@ export default {
                         maxZoom: 22
                         // TODO: get min/max zoom from file
                     })
-                }));
+                });
+                tileLayer.file = f;
+                rasters.push(tileLayer);
 
-                this.extentsFeatures.addFeature(
-                    new Feature(fromExtent(extent))
-                );
+                // We create "hidden" extents as polygons
+                // so that we can click raster layers
+                const extentFeat = new Feature(fromExtent(extent));
+                extentFeat.file = f;
+                this.extentsFeatures.addFeature(extentFeat);
             }
         });
 
@@ -377,6 +411,8 @@ export default {
                 });
             }, 10);
         }
+
+        this.updateRastersOpacity();
       },
       handleKeyDown: function(){
         if (Keyboard.isCtrlPressed() && this.mouseInside){
@@ -406,27 +442,54 @@ export default {
           // We're selecting
           if (this.selectSingle) return;
 
+          // Remove all
           this.outlineFeatures.forEachFeature(outline => {
-                // Remove?
                 this.outlineFeatures.removeFeature(outline);
+                
+                // Deselect style
+                if (outline.feat.get('features')){
+                    outline.feat.get('features').forEach(f => {
+                        f.style = 'shot';
+                    });
+                }
+
                 delete(outline.feat.outline);
           });
-
-          // TODO: handle toggle
-
+          this.clearLayerGroup(this.footprintRastersLayer);
+        
+          // Add selected
           e.selected.forEach(feat => {
-            //TODO: highlight point features to #fde293 ?
             if (!feat.outline){
                 let outline = null;
 
-                if (feat.values_.features){
-                    // Geoimage (point)
-                    const file = feat.values_.features[0].file;
+                if (feat.get('features')){
+                    // Geoimage (point cluster)
+                    const file = feat.get('features')[0].file;
                     if (file.entry.polygon_geom){
                         const coords = coordAll(file.entry.polygon_geom);
                         outline = new Feature(new Polygon([coords]));
                         outline.getGeometry().transform('EPSG:4326', 'EPSG:3857');
                     }
+
+                    // Set style
+                    feat.get('features').forEach(f => {
+                        f.style = 'shot-outlined';
+                    });
+
+                    // Add geoprojected raster footprint
+                    const rasterFootprint = new TileLayer({
+                        extent: outline.getGeometry().getExtent(), 
+                        source: new HybridXYZ({
+                            url: file.path,
+                            tileSize: 256,
+                            transition: 0, // TODO: why transitions don't work?
+                            minZoom: 14,
+                            maxZoom: 22
+                            // TODO: get min/max zoom somehow?
+                        })
+                    });
+                    // tileLayer.file = f;
+                    this.footprintRastersLayer.getLayers().push(rasterFootprint);
                 }else{
                     // Extent
                     outline = feat;
@@ -439,9 +502,18 @@ export default {
                 feat.outline = outline;
             }
           });
+          
+          // Update styles
+          this.fileLayer.changed();
       },
       clearSelection: function(){
           this.files.forEach(f => f.selected = false);
+      },
+      updateRastersOpacity: function(){
+          this.rasterLayer.getLayers().forEach(layer => {
+              if (layer.file.selected) layer.setOpacity(0.8);
+              else layer.setOpacity(1.0);
+          });
       }
   }
 }
