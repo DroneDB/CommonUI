@@ -240,7 +240,13 @@ export default {
     });
 
     const doSelectSingle = e => {
+        let first = true;
+
         this.map.forEachFeatureAtPixel(e.pixel, feat => {
+            // Only select the first entry
+            if (!first) return;
+            first = false;
+
             const feats = feat.get('features');
             if (feats){
                 // Geoimage point cluster
@@ -251,6 +257,7 @@ export default {
                         break;
                     }
                 }
+
                 for (let i = 0; i < feats.length; i++){
                     if (feats[i].file) feats[i].file.selected = !selected;
                 }
