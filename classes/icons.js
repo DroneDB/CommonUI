@@ -8,6 +8,7 @@ const typeIconMap = {
     [entry.type.POINTCLOUD]: "braille",
     [entry.type.IMAGE]: "file image outline",
     [entry.type.DRONEDB]: "database",
+    [entry.type.MARKDOWN]: "book"
 };
 
 export default {

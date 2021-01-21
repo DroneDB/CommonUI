@@ -155,6 +155,13 @@ export default {
             // Select last
             const f = thumbs[parseInt($n.getAttribute('data-idx'))].file;
             f.selected = true;
+        },
+
+        scrollTo: function(file){
+            const thumb = this.$refs.thumbs.find(t => t.file === file);
+            if (thumb){
+                this.$el.scrollTo(0, thumb.$el.offsetTop - this.$el.offsetTop - 12);
+            }
         }
     }
 }

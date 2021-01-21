@@ -116,7 +116,8 @@ export default {
                 this.panel0Style.height = height + '%';
                 this.panel1Style.height = (100 - height) + '%';
               }
-          }else if (e.target === this.$el || e.target.parentElement === this.$el || (e.target.parentElement || {}).parentElement === this.$el){
+          }else{
+            // TODO: does this work with popup windows (check z-index)?
             const left = this.$el.children[0].offsetLeft,
                     right = left + this.$el.children[0].clientWidth,
                     top = this.$el.children[0].offsetTop,
@@ -140,10 +141,6 @@ export default {
                 this.canResize = false;
                 Mouse.clearCursor(this.split === "vertical" ? "ew-resize" : "ns-resize");
             }
-            
-          }else if (this.canResize){
-            this.canResize = false;
-            Mouse.clearCursor(this.split === "vertical" ? "ew-resize" : "ns-resize");
           }
       }
     },

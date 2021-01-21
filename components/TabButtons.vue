@@ -1,7 +1,7 @@
 <template>
     <div class="buttons">
         <div v-for="t in tabs" class="tab-button" :class="{ active: activeTab === t.key, top: position === 'top' }" @click="setActiveTab(t)">
-            <i class="icon" :class="t.icon" /> {{ t.label }}
+            <i class="icon" :class="{padded: !!t.hideLabel, [t.icon]: true}" :title="t.label" /><span v-if="!t.hideLabel"> {{ t.label }}</span>
         </div>
         <div v-if="buttonWidth === 'auto'" class="fill" :class="{ top: position === 'top', shadowed: lastTabSelected }">
         </div>
@@ -71,30 +71,23 @@ export default {
         border-left: 1px solid #000;
         border-top: 1px solid #000;
         &.shadowed{
-            box-shadow: inset 3px 0px 3px -3px;
+            box-shadow: inset 3px 0px 2px -3px;
         }
     }
     .tab-button {
         background-color: #eee;
-        box-shadow: inset 0px 0px -3px 0px;
+        box-shadow: inset 2px 2px 3px -2px;
         border-top: 1px solid #000;
+        border-left: 1px solid rgba(0,0,0,0);
+        
         &.top{
-            box-shadow: inset 0px 0px 3px 0px;
+            box-shadow: inset 2px -1px 3px -2px;
             border-top: none;
             border-bottom: 1px solid #000;
         }
         
-        &:first-child {
-            box-shadow: inset -3px 3px 3px -3px;
-            border-right: 1px solid #000;
-        }
-
         flex-grow: 1;
 
-        &:last-child {
-            box-shadow: inset 3px 3px 3px -3px;
-            border-left: 1px solid #000;
-        }
 
         &:hover {
             cursor: pointer;
@@ -103,7 +96,14 @@ export default {
 
         &.active {
             box-shadow: none;
-            border: none;
+            border-bottom: none;
+            border-top: none;
+
+            border-left: 1px solid #000;
+            &:first-child{
+                border-left: 1px solid rgba(0,0,0,0);
+
+            }
             background-color: #fefefe;
 
             &:hover {
@@ -113,6 +113,10 @@ export default {
             &.top{
                 box-shadow: none;
             }
+        }
+
+        .icon.padded{
+            padding-left: 3px;
         }
     }
 }

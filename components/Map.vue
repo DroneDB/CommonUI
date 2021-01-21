@@ -217,7 +217,15 @@ export default {
         if (deselect){
             intersect.forEach(feat => feat.file.selected = false);
         }else{
-            intersect.forEach(feat => feat.file.selected = true);
+            let scrolled = false;
+            intersect.forEach(feat => {
+                feat.file.selected = true;
+
+                if (!scrolled){
+                    this.$emit("scrollTo", feat.file);
+                    scrolled = true;
+                }
+            });
         }
     });
 
@@ -260,6 +268,11 @@ export default {
 
                 for (let i = 0; i < feats.length; i++){
                     if (feats[i].file) feats[i].file.selected = !selected;
+                }
+                
+                // Inform other components we should scroll to this file
+                if (!selected && feats.length && feats[0].file){
+                    this.$emit("scrollTo", feats[0].file);
                 }
             }else{
                 // Extents selection
@@ -440,7 +453,7 @@ export default {
       },
       handleSingleClick: function(e){
           // We're selecting
-          if (this.selectSingle) return;
+          if (this.selectSingle || Keyboard.isCtrlPressed()) return;
 
           // Remove all
           this.outlineFeatures.forEachFeature(outline => {

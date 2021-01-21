@@ -45,7 +45,7 @@ export default {
           icon: null,
           error: null,
           iconStyle: {
-            fontSize: parseInt(this.size / 2) + 'px'
+            fontSize: parseInt(this.size / 3) + 'px'
           },
           sizeStyle: {
               width: this.size + 'px',

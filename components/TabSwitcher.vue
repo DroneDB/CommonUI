@@ -57,20 +57,56 @@ export default {
           this.activeTab = tab.key;
       },
 
-      addTab: function(tab, activate = true){
-          const node = this.$createElement(tab.component, { props: { user: "PIERO" }});
-          this.$slots[tab.key] = [node];
+      addTab: function(tab, activate = true, prepend = false){
+          if (this.$slots[tab.key]) this.removeTab(tab.key);
 
-          this.dynTabs.push({
+          const node = this.$createElement(tab.component, { props: tab.props });
+          this.$slots[tab.key] = [node];
+          
+          const tabDef = {
                 label: tab.label,
                 icon: tab.icon,
-                key: tab.key
-          });
+                key: tab.key,
+                hideLabel: tab.hideLabel
+          };
+
+          if (prepend){
+              this.dynTabs.unshift(tabDef);
+          }else{
+              this.dynTabs.push(tabDef);
+          }
 
           if (activate){
             this.setActiveTab(tab);
             this.$forceUpdate();
           }
+      },
+
+      removeTab: function(tabKey){
+          const tabIndex = this.dynTabs.findIndex(t => t.key === tabKey);
+          if (tabIndex !== -1){
+            let tabToActivate = tabIndex - 1;
+
+            // Last tab?
+            if (tabToActivate < 0){
+                tabToActivate = 0;
+            }
+
+            // No tabs left after?
+            if (this.dynTabs.length === 1){
+                tabToActivate = -1;
+            }
+
+            // Remove
+            this.dynTabs = this.dynTabs.filter(t => t.key !== tabKey);
+
+            if (tabToActivate !== -1){
+                this.setActiveTab(this.dynTabs[tabToActivate]);
+            }
+          }else{
+              console.warn(`Cannot remove tab with key: ${tabKey}`);
+          }
+          
       }
   }
 }
