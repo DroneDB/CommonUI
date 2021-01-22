@@ -24,6 +24,7 @@ import Feature from 'ol/Feature';
 import { coordEach, coordAll } from '@turf/meta';
 import bbox from '@turf/bbox';
 import Point from 'ol/geom/Point';
+import LineString from 'ol/geom/LineString';
 import Polygon from 'ol/geom/Polygon';
 import { fromExtent } from 'ol/geom/Polygon';
 
@@ -33,7 +34,7 @@ import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 
-import {Circle as CircleStyle, Fill, Stroke, Style, Text} from 'ol/style';
+import {Circle as CircleStyle, Fill, Stroke, Style, Text, Icon} from 'ol/style';
 
 export default {
   components: {
@@ -159,6 +160,31 @@ export default {
             fill: new Fill({
                 color: 'rgba(0, 0, 0, 0)'
             })
+        }),
+
+        startFlag: new Style({
+            image: new Icon({
+                anchor: [0.05, 1],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'fraction',
+                src: '/images/start-flag.svg',
+            })
+        }),
+
+        finishFlag: new Style({
+            image: new Icon({
+                anchor: [0.05, 1],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'fraction',
+                src: '/images/finish-flag.svg',
+            })
+        }),
+
+        flightPath: new Style({
+            stroke: new Stroke({
+                color: 'rgba(75, 150, 243, 1)', //'rgba(253, 226, 147, 1)',
+                width: 4
+            })
         })
     };
 
@@ -191,6 +217,14 @@ export default {
     });
     this.footprintRastersLayer = new LayerGroup();
 
+    this.flightPathFeatures = new VectorSource();
+    this.flightPathLayer = new VectorLayer({
+        source: this.flightPathFeatures
+    });
+    this.markerFeatures = new VectorSource();
+    this.markerLayer = new VectorLayer({
+        source: this.markerFeatures
+    });
 
     this.dragBox = new DragBox({minArea: 0});
     this.dragBox.on('boxend', () => {
@@ -239,7 +273,9 @@ export default {
             this.footprintRastersLayer,
             this.extentLayer,
             this.outlineLayer,
+            this.flightPathLayer,
             this.fileLayer,
+            this.markerLayer
         ],
         view: new View({
             center: [0, 0],
@@ -370,23 +406,34 @@ export default {
       reloadFileLayers: function(){
         this.fileFeatures.clear();
         this.outlineFeatures.clear();
+        this.flightPathFeatures.clear();
+        this.markerFeatures.clear();
         this.clearLayerGroup(this.rasterLayer);
 
         const features = [];
         const rasters = this.rasterLayer.getLayers();
+
+        let flightPath = [];
 
         // Create features, add them to map
         this.files.forEach(f => {
             if (!f.entry) return;
 
             if (f.entry.type === ddb.entry.type.GEOIMAGE){
-                coordEach(f.entry.point_geom, (coord) => {
-                    const feat = new Feature(new Point(coord));
-                    feat.style = 'shot';
-                    feat.file = f;
-                    feat.getGeometry().transform('EPSG:4326', 'EPSG:3857');
-                    features.push(feat);
-                });
+                const coords = coordAll(f.entry.point_geom)[0];
+                const point = new Point(coords);
+                const feat = new Feature(point);
+                feat.style = 'shot';
+                feat.file = f;
+                feat.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+                features.push(feat);
+
+                if (f.entry.meta.captureTime){
+                    flightPath.push({
+                        point,
+                        captureTime: f.entry.meta.captureTime
+                    });
+                }
             }else if (f.entry.type === ddb.entry.type.GEORASTER){
                 const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
                 const tileLayer = new TileLayer({
@@ -412,6 +459,32 @@ export default {
         });
 
         if (features.length) this.fileFeatures.addFeatures(features);
+
+        // Add flight path line
+        if (flightPath.length >= 2){
+            flightPath.sort((a, b) => a.captureTime < b.captureTime ? -1 : (a.captureTime === b.captureTime ? 0 : 1));
+            const startPoint = flightPath[0].point;
+            const finishPoint = flightPath[flightPath.length - 1].point;
+
+            const addFlag = (point, style) => {
+                const feat = new Feature({
+                    geometry: point
+                });
+                // feat.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+                feat.setStyle(style);
+                this.markerFeatures.addFeature(feat);
+            };
+
+            addFlag(startPoint, this.styles.startFlag);
+            addFlag(finishPoint, this.styles.finishFlag);
+
+            // Draw linestring
+            const pathFeat = new Feature({
+                geometry: new LineString(flightPath.map(fp => fp.point.flatCoordinates))
+            });
+            pathFeat.setStyle(this.styles.flightPath);
+            this.flightPathFeatures.addFeature(pathFeat);
+        }
 
         const ext = this.getSelectedFilesExtent();
         if (!isEmptyExtent(ext)){
