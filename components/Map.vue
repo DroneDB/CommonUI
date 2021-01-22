@@ -226,6 +226,13 @@ export default {
         source: this.markerFeatures
     });
 
+    this.topLayers = new LayerGroup();
+    this.topLayers.setLayers(new Collection([
+        this.flightPathLayer,
+        this.fileLayer,
+        this.markerLayer
+    ]));
+
     this.dragBox = new DragBox({minArea: 0});
     this.dragBox.on('boxend', () => {
         let extent = this.dragBox.getGeometry().getExtent();
@@ -273,9 +280,7 @@ export default {
             this.footprintRastersLayer,
             this.extentLayer,
             this.outlineLayer,
-            this.flightPathLayer,
-            this.fileLayer,
-            this.markerLayer
+            this.topLayers,
         ],
         view: new View({
             center: [0, 0],
@@ -542,6 +547,7 @@ export default {
                 delete(outline.feat.outline);
           });
           this.clearLayerGroup(this.footprintRastersLayer);
+          this.topLayers.setVisible(true);
         
           // Add selected
           e.selected.forEach(feat => {
@@ -586,6 +592,8 @@ export default {
                 // Add reference to self (for deletion later)
                 outline.feat = feat;
                 feat.outline = outline;
+
+                this.topLayers.setVisible(false);
             }
           });
           
