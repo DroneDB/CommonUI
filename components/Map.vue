@@ -33,6 +33,7 @@ import HybridXYZ from '../classes/olHybridXYZ';
 import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
+import { rootPath } from 'commonui/dynamic/pathutils';
 
 import {Circle as CircleStyle, Fill, Stroke, Style, Text, Icon} from 'ol/style';
 
@@ -167,7 +168,7 @@ export default {
                 anchor: [0.05, 1],
                 anchorXUnits: 'fraction',
                 anchorYUnits: 'fraction',
-                src: '/images/start-flag.svg',
+                src: rootPath('images/start-flag.svg'),
             })
         }),
 
@@ -176,7 +177,7 @@ export default {
                 anchor: [0.05, 1],
                 anchorXUnits: 'fraction',
                 anchorYUnits: 'fraction',
-                src: '/images/finish-flag.svg',
+                src: rootPath('images/finish-flag.svg'),
             })
         }),
 
