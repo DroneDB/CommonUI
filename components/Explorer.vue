@@ -1,6 +1,13 @@
 <template>
-<div id="explorer" @click="onClick" :class="{loading}">
-    <Thumbnail v-for="(f, idx) in files" :file="f" :key="f.path" :data-idx="idx" ref="thumbs" @clicked="handleSelection" @open="handleOpen" />
+<div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
+    <Thumbnail v-for="(f, idx) in files" 
+                :file="f" 
+                :key="f.path" 
+                :data-idx="idx" 
+                ref="thumbs" 
+                @clicked="handleSelection" 
+                @open="handleOpen"
+                :lazyLoad="true" />
 </div>
 </template>
 
@@ -75,6 +82,9 @@ export default {
             }
         ]);
     },
+    updated: function(){
+        this.lazyLoadThumbs();
+    },
     beforeDestroy: function () {
         unregisterContextMenu(this.$el);
     },
@@ -84,6 +94,29 @@ export default {
             if (e.target === this.$el) {
                 this.deselectAll();
             }
+        },
+        lazyLoadThumbs: function(){
+            if (!this.$refs.thumbs) return;
+
+            const parentBcr = this.$el.getBoundingClientRect();
+            this.$refs.thumbs.forEach(t => {
+                const thumbBcr = t.getBoundingRect();
+                if (thumbBcr.bottom - parentBcr.top  > 0 &&
+                    parentBcr.bottom - thumbBcr.top > 0 &&
+                    thumbBcr.right - parentBcr.left > 0 &&
+                    parentBcr.right - thumbBcr.left > 0){
+                    t.loadThumbnail();
+                }
+            });
+        },
+        onScroll: function(){
+            if (this.scrollTimeout){
+                clearTimeout(this.scrollTimeout);
+                this.scrollTimeout = null;
+            }
+            this.scrollTimeout = setTimeout(() => {
+                this.lazyLoadThumbs();
+            }, 250);
         },
         selectAll: function () {
             this.files.forEach(f => f.selected = true);

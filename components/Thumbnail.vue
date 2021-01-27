@@ -8,7 +8,7 @@
         @dblclick="onDblClick">
         <div class="container" :class="{bordered: thumbnail !== null}"
             :style="sizeStyle">
-            <img v-if="thumbnail !== null && !loading" :src="thumbnail" />
+            <img v-if="thumbnail !== null && !loading" :src="thumbnail" ref="image" />
             <i class="icon icon-file " :class="icon" :style="iconStyle" v-if="icon && !loading" />
             <i class="icon circle notch spin loading" v-if="loading || (thumbnail === null && icon === null)" />
         </div>
@@ -33,6 +33,10 @@ export default {
           type: Number,
           required: false,
           default: 128
+      },
+      lazyLoad: {
+          type: Boolean,
+          default: false
       }
   },
   data: function(){
@@ -55,19 +59,32 @@ export default {
       }
   },
   mounted: async function(){
-      try{
-          if (thumbs.supportedForType(this.file.entry.type)){
-            this.thumbnail = await thumbs.fetch(this.file.path);
-          }else{
-            this.icon = this.file.icon;
-          }
-      }catch(e){
-          console.warn(e);
-          this.error = e;
-          this.icon = "exclamation triangle";
-      }
+      if (!this.lazyLoad) await this.loadThumbnail();
   },
   methods: {
+      getBoundingRect: function(){
+          return this.$el.getBoundingClientRect();
+      },
+      loadThumbnail: async function(){
+        if (this.loadingThumbnail) return; // Already loading
+        if (this.thumbnail && !this.error) return; // Already loaded
+
+        this.loadingThumbnail = true;
+
+        try{
+            if (thumbs.supportedForType(this.file.entry.type)){
+                this.thumbnail = await thumbs.fetch(this.file.path);
+            }else{
+                this.icon = this.file.icon;
+            }
+            this.loadingThumbnail = false;
+        }catch(e){
+            console.warn(e);
+            this.error = e;
+            this.icon = "exclamation triangle";
+            this.loadingThumbnail = false;
+        }
+      },
       onClick: function(e){
           Keyboard.updateState(e);
           this.$emit('clicked', this, Mouse.LEFT);
@@ -127,6 +144,7 @@ export default {
 
     i.loading{
         position: relative;
+        z-index: 2;
         top: -40%;
     }
 }
