@@ -14,7 +14,6 @@ import {Map, View} from 'ol';
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from 'ol/layer';
 import {OSM, Vector as VectorSource, Cluster} from 'ol/source';
 import {defaults as defaultControls, Control} from 'ol/control';
-import Select from 'ol/interaction/Select';
 import Collection from 'ol/Collection';
 import {DragBox} from 'ol/interaction';
 import {createEmpty as createEmptyExtent, isEmpty as isEmptyExtent, extend as extendExtent} from 'ol/extent';
@@ -327,6 +326,79 @@ export default {
         // Single selection
         if (this.selectSingle){
             doSelectSingle(e);
+        }else{
+          // Remove all
+          this.outlineFeatures.forEachFeature(outline => {
+                this.outlineFeatures.removeFeature(outline);
+                
+                // Deselect style
+                if (outline.feat.get('features')){
+                    outline.feat.get('features').forEach(f => {
+                        f.style = 'shot';
+                    });
+                }
+
+                delete(outline.feat.outline);
+          });
+          this.clearLayerGroup(this.footprintRastersLayer);
+          this.topLayers.setVisible(true);
+        
+          // Add selected
+          this.map.forEachFeatureAtPixel(e.pixel, feat => {
+            if (!feat.outline){
+                let outline = null;
+
+                if (feat.get('features')){
+                    // Geoimage (point cluster)
+                    const file = feat.get('features')[0].file;
+                    if (file.entry.polygon_geom){
+                        const coords = coordAll(file.entry.polygon_geom);
+                        outline = new Feature(new Polygon([coords]));
+                        outline.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+                    }
+
+                    // Set style
+                    feat.get('features').forEach(f => {
+                        f.style = 'shot-outlined';
+                    });
+
+                    // Add geoprojected raster footprint
+                    const rasterFootprint = new TileLayer({
+                        extent: outline.getGeometry().getExtent(), 
+                        source: new HybridXYZ({
+                            url: file.path,
+                            tileSize: 256,
+                            transition: 0, // TODO: why transitions don't work?
+                            minZoom: 14,
+                            maxZoom: 22
+                            // TODO: get min/max zoom somehow?
+                        })
+                    });
+                    // tileLayer.file = f;
+                    this.footprintRastersLayer.getLayers().push(rasterFootprint);
+                }else{
+                    // Extent
+                    outline = feat;
+                }
+
+                this.outlineFeatures.addFeature(outline);
+
+                // Add reference to self (for deletion later)
+                outline.feat = feat;
+                feat.outline = outline;
+
+                this.topLayers.setVisible(false);
+            }
+          }, { 
+              layerFilter: layer => {
+                  return layer.getVisible() && 
+                        (layer === this.fileLayer ||
+                         layer === this.extentLayer);
+              }
+          });
+          
+          // Update styles
+          this.fileLayer.changed();
         }
     });
 
@@ -335,15 +407,6 @@ export default {
         // Single selection
         doSelectSingle(e);
     });
-
-    // Single click
-    const singleClick = new Select({
-        style: null, // We'll handle styling ourselves :/
-        layers: [this.fileLayer, this.extentLayer],
-        toggleCondition: () => false
-    });
-    singleClick.on('select', this.handleSingleClick);
-    this.map.addInteraction(singleClick);
 
     Keyboard.onKeyDown(this.handleKeyDown);
     Keyboard.onKeyUp(this.handleKeyUp);
@@ -529,77 +592,6 @@ export default {
             }
             this.$refs.toolbar.deselectTool('select-features');
         }
-      },
-      handleSingleClick: function(e){
-          // We're selecting
-          if (this.selectSingle || Keyboard.isCtrlPressed()) return;
-
-          // Remove all
-          this.outlineFeatures.forEachFeature(outline => {
-                this.outlineFeatures.removeFeature(outline);
-                
-                // Deselect style
-                if (outline.feat.get('features')){
-                    outline.feat.get('features').forEach(f => {
-                        f.style = 'shot';
-                    });
-                }
-
-                delete(outline.feat.outline);
-          });
-          this.clearLayerGroup(this.footprintRastersLayer);
-          this.topLayers.setVisible(true);
-        
-          // Add selected
-          e.selected.forEach(feat => {
-            if (!feat.outline){
-                let outline = null;
-
-                if (feat.get('features')){
-                    // Geoimage (point cluster)
-                    const file = feat.get('features')[0].file;
-                    if (file.entry.polygon_geom){
-                        const coords = coordAll(file.entry.polygon_geom);
-                        outline = new Feature(new Polygon([coords]));
-                        outline.getGeometry().transform('EPSG:4326', 'EPSG:3857');
-                    }
-
-                    // Set style
-                    feat.get('features').forEach(f => {
-                        f.style = 'shot-outlined';
-                    });
-
-                    // Add geoprojected raster footprint
-                    const rasterFootprint = new TileLayer({
-                        extent: outline.getGeometry().getExtent(), 
-                        source: new HybridXYZ({
-                            url: file.path,
-                            tileSize: 256,
-                            transition: 0, // TODO: why transitions don't work?
-                            minZoom: 14,
-                            maxZoom: 22
-                            // TODO: get min/max zoom somehow?
-                        })
-                    });
-                    // tileLayer.file = f;
-                    this.footprintRastersLayer.getLayers().push(rasterFootprint);
-                }else{
-                    // Extent
-                    outline = feat;
-                }
-
-                this.outlineFeatures.addFeature(outline);
-
-                // Add reference to self (for deletion later)
-                outline.feat = feat;
-                feat.outline = outline;
-
-                this.topLayers.setVisible(false);
-            }
-          });
-          
-          // Update styles
-          this.fileLayer.changed();
       },
       clearSelection: function(){
           this.files.forEach(f => f.selected = false);
