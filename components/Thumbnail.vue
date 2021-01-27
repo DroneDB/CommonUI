@@ -144,7 +144,6 @@ export default {
 
     i.loading{
         position: relative;
-        z-index: 2;
         top: -40%;
     }
 }

@@ -28,8 +28,7 @@ function genTileFSLoadFunction(filePath, minZoom){
 }
 
 function genTileDDBLoadFunction(ddbUri, minZoom){
-    const { registryUrl, org, ds, path } = ddb.utils.parseUri(ddbUri);
-    const dataset = new ddb.Registry(registryUrl).Organization(org).Dataset(ds);
+    const [dataset, path] = ddb.utils.datasetPathFromUri(ddbUri);
             
     return (tile, src) => {
         tile.setState(TileState.LOADING);
@@ -62,13 +61,17 @@ class HybridXYZ extends XYZ{
             // minZoom freezes OL. Bho... so we remove it
             delete(opt_options.minZoom);
         }
-
+        const url = opt_options.url;
+        
+        // Override opt_options.url to a dummy URL
+        // so that we can send parallel tile requests
+        opt_options.url = "https://{z}/{x}/{y}";
         super(opt_options);
 
         if (isFS){
-            this.tileLoadFunction = genTileFSLoadFunction(opt_options.url, minZoom).bind(this);
+            this.tileLoadFunction = genTileFSLoadFunction(url, minZoom).bind(this);
         }else if (isDDB){
-            this.tileLoadFunction = genTileDDBLoadFunction(opt_options.url, minZoom).bind(this);
+            this.tileLoadFunction = genTileDDBLoadFunction(url, minZoom).bind(this);
         }
     }
 };
