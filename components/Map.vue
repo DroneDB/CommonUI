@@ -356,7 +356,10 @@ export default {
                         outline = new Feature(new Polygon([coords]));
                         outline.getGeometry().transform('EPSG:4326', 'EPSG:3857');
                     }
-
+                    
+                    // Nothing else to do
+                    if (!outline) return;
+                    
                     // Set style
                     feat.get('features').forEach(f => {
                         f.style = 'shot-outlined';
@@ -488,7 +491,7 @@ export default {
         this.files.forEach(f => {
             if (!f.entry) return;
 
-            if (f.entry.type === ddb.entry.type.GEOIMAGE){
+            if (f.entry.type === ddb.entry.type.GEOIMAGE || f.entry.type === ddb.entry.type.GEOVIDEO){
                 const coords = coordAll(f.entry.point_geom)[0];
                 const point = new Point(coords);
                 const feat = new Feature(point);
@@ -497,11 +500,13 @@ export default {
                 feat.getGeometry().transform('EPSG:4326', 'EPSG:3857');
                 features.push(feat);
 
-                if (f.entry.meta.captureTime){
-                    flightPath.push({
-                        point,
-                        captureTime: f.entry.meta.captureTime
-                    });
+                if (f.entry.type === ddb.entry.type.GEOIMAGE){
+                    if (f.entry.meta.captureTime){
+                        flightPath.push({
+                            point,
+                            captureTime: f.entry.meta.captureTime
+                        });
+                    }
                 }
             }else if (f.entry.type === ddb.entry.type.GEORASTER){
                 const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');

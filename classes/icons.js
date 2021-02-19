@@ -8,7 +8,9 @@ const typeIconMap = {
     [entry.type.POINTCLOUD]: "braille",
     [entry.type.IMAGE]: "file image outline",
     [entry.type.DRONEDB]: "database",
-    [entry.type.MARKDOWN]: "book"
+    [entry.type.MARKDOWN]: "book",
+    [entry.type.VIDEO]: "file video outline",
+    [entry.type.GEOVIDEO]: "film"
 };
 
 export default {
