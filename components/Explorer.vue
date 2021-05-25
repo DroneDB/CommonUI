@@ -1,5 +1,7 @@
 <template>
-<div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
+<div id="explorer-container">
+    <Toolbar :tools="tools" ref="toolbar" />
+    <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
                 :file="f" 
                 :key="f.path" 
@@ -8,6 +10,7 @@
                 @clicked="handleSelection" 
                 @open="handleOpen"
                 :lazyLoad="true" />
+    </div>
 </div>
 </template>
 
@@ -15,6 +18,7 @@
 import Thumbnail from './Thumbnail.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
+import Toolbar from './Toolbar.vue';
 
 import { entry } from 'ddb';
 import shell from 'commonui/dynamic/shell';
@@ -25,12 +29,38 @@ import {
 
 export default {
     components: {
-        Thumbnail
+        Thumbnail, Toolbar
     },
     props: ['files'],
     data: function () {
         return {
-            loading: false
+            loading: false,
+            tools: [
+                {
+                    id: 'upload',
+                    title: "Upload",
+                    icon: "upload",
+                    onClick: () => {
+                        alert("upload");
+                    }
+                },
+                {
+                    id: 'rename',
+                    title: "Rename",
+                    icon: "edit",
+                    onClick: () => {
+                        alert("edit");
+                    }
+                },
+                {
+                    id: 'remove',
+                    title: "Remove",
+                    icon: "trash alternate",
+                    onClick: () => {
+                        alert("remove");
+                    }
+                },
+            ],
         };
     },
     computed: {
@@ -206,8 +236,8 @@ export default {
     flex-wrap: wrap;
     align-items: flex-start;
     align-content: flex-start;
-    width: 100%;
-    height: 100%;
+    /*width: 100%;
+    height: 100%;*/
     padding: 8px;
     overflow-y: auto;
     user-select: none;
@@ -216,5 +246,12 @@ export default {
         opacity: 0.5;
         pointer-events: none;
     }
+}
+
+#explorer-container {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
 }
 </style>
