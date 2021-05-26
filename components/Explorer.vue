@@ -11,11 +11,23 @@
                 @open="handleOpen"
                 :lazyLoad="true" />
     </div>
+    <sui-modal v-model="uploadDialogOpen">
+      <sui-modal-header>Upload new files</sui-modal-header>
+      <sui-modal-content>        
+        <dataset-upload></dataset-upload>
+      </sui-modal-content>
+      <sui-modal-actions>
+        <sui-button positive @click.native="uploadDialogOpen=false">
+          Close
+        </sui-button>
+      </sui-modal-actions>
+    </sui-modal>
 </div>
 </template>
 
 <script>
 import Thumbnail from './Thumbnail.vue';
+import DatasetUpload from './DatasetUpload.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import Toolbar from './Toolbar.vue';
@@ -29,19 +41,21 @@ import {
 
 export default {
     components: {
-        Thumbnail, Toolbar
+        Thumbnail, Toolbar,
+        DatasetUpload
     },
     props: ['files'],
     data: function () {
         return {
             loading: false,
+            uploadDialogOpen: false,
             tools: [
                 {
                     id: 'upload',
                     title: "Upload",
                     icon: "upload",
                     onClick: () => {
-                        alert("upload");
+                        this.uploadDialogOpen = true;
                     }
                 },
                 {
