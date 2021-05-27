@@ -1,6 +1,5 @@
 <template>
 <div id="explorer-container">
-    <Toolbar :tools="tools" ref="toolbar" />
     <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
                 :file="f" 
@@ -10,27 +9,14 @@
                 @clicked="handleSelection" 
                 @open="handleOpen"
                 :lazyLoad="true" />
-    </div>
-    <sui-modal v-model="uploadDialogOpen">
-      <sui-modal-header>Upload new files</sui-modal-header>
-      <sui-modal-content>        
-        <dataset-upload></dataset-upload>
-      </sui-modal-content>
-      <sui-modal-actions>
-        <sui-button positive @click.native="uploadDialogOpen=false">
-          Close
-        </sui-button>
-      </sui-modal-actions>
-    </sui-modal>
+    </div>    
 </div>
 </template>
 
 <script>
 import Thumbnail from './Thumbnail.vue';
-import DatasetUpload from './DatasetUpload.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
-import Toolbar from './Toolbar.vue';
 
 import { entry } from 'ddb';
 import shell from 'commonui/dynamic/shell';
@@ -41,40 +27,12 @@ import {
 
 export default {
     components: {
-        Thumbnail, Toolbar,
-        DatasetUpload
+        Thumbnail        
     },
     props: ['files'],
     data: function () {
         return {
-            loading: false,
-            uploadDialogOpen: false,
-            tools: [
-                {
-                    id: 'upload',
-                    title: "Upload",
-                    icon: "upload",
-                    onClick: () => {
-                        this.uploadDialogOpen = true;
-                    }
-                },
-                {
-                    id: 'rename',
-                    title: "Rename",
-                    icon: "edit",
-                    onClick: () => {
-                        alert("edit");
-                    }
-                },
-                {
-                    id: 'remove',
-                    title: "Remove",
-                    icon: "trash alternate",
-                    onClick: () => {
-                        alert("remove");
-                    }
-                },
-            ],
+            loading: false            
         };
     },
     computed: {
@@ -250,8 +208,8 @@ export default {
     flex-wrap: wrap;
     align-items: flex-start;
     align-content: flex-start;
-    /*width: 100%;
-    height: 100%;*/
+    width: 100%;
+    height: 100%;
     padding: 8px;
     overflow-y: auto;
     user-select: none;
