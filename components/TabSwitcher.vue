@@ -60,7 +60,11 @@ export default {
       addTab: function(tab, activate = true, prepend = false){
           if (this.$slots[tab.key]) this.removeTab(tab.key);
 
-          const node = this.$createElement(tab.component, { props: tab.props });
+          const node = this.$createElement(tab.component, {
+               props: tab.props,
+               on: typeof tab.on !== 'undefined' ? tab.on : []
+          });
+
           this.$slots[tab.key] = [node];
           
           const tabDef = {
