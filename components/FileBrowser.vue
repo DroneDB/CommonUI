@@ -17,7 +17,7 @@ import {
 } from 'commonui/dynamic/menu';
 import shell from 'commonui/dynamic/shell';
 import ddb from 'ddb';
-const { pathutils} = ddb;
+const { pathutils } = ddb;
 import icons from '../classes/icons';
 
 export default {
@@ -55,85 +55,90 @@ export default {
             }
         }]);
 
-        const rootNodes = await this.rootNodes();
-        for (let i = 0; i < rootNodes.length; i++){
-            const n = rootNodes[i];
-            const getChildren = async function () {
-                try {
-                    const entries = await ddb.fetchEntries(this.path, {
-                        withHash: false,
-                        recursive: true,
-                        maxRecursionDepth: 1,
-                        stopOnError: false
-                    });
-
-                    return entries.filter(entry => {
-                            return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
-                        })
-                        .sort((a, b) => {
-                            // Folders first
-                            let aDir = ddb.entry.isDirectory(a);
-                            let bDir = ddb.entry.isDirectory(b);
-
-                            if (aDir && !bDir) return -1;
-                            else if (!aDir && bDir) return 1;
-                            else {
-                                // then filename ascending
-                                return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
-                            }
-                        })
-                        .map(entry => {
-                            const base = pathutils.basename(entry.path);
-
-                            return {
-                                icon: icons.getForType(entry.type),
-                                label: base,
-                                path: pathutils.join(this.path, base),
-                                getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
-                                selected: false,
-                                entry
-                            }
-                        });
-                } catch (e) {
-                    if (e.message == "Unauthorized"){
-                        this.$emit('unauthorized');
-                    }else{
-                        console.error(e);
-                    }
-                    return [];
-                }
-            };
-
-            try{
-                const entry = n.entry || (await ddb.fetchEntries(n.path, {
-                    withHash: false
-                }))[0];
-
-                this.nodes.push({
-                    icon: n.icon,
-                    label: n.label,
-                    path: n.path,
-                    getChildren,
-                    selected: false,
-                    expanded: !!n.expanded,
-                    root: true,
-                    entry
-                });
-            }catch(e){
-                if (e.message == "Unauthorized"){
-                    this.$emit('unauthorized');
-                }else{
-                    console.error(e);
-                }
-            }
-        }
-
-        this.loading = false;
+        await this.refreshNodes();
     },
     beforeDestroy: function () {
         unregisterContextMenu(this.$el);
     },
     methods: {
+
+        refreshNodes: async function() {
+            const rootNodes = await this.rootNodes();
+
+            for (let i = 0; i < rootNodes.length; i++){
+                const n = rootNodes[i];
+                const getChildren = async function () {
+                    try {
+                        const entries = await ddb.fetchEntries(this.path, {
+                            withHash: false,
+                            recursive: true,
+                            maxRecursionDepth: 1,
+                            stopOnError: false
+                        });
+
+                        return entries.filter(entry => {
+                                return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
+                            })
+                            .sort((a, b) => {
+                                // Folders first
+                                let aDir = ddb.entry.isDirectory(a);
+                                let bDir = ddb.entry.isDirectory(b);
+
+                                if (aDir && !bDir) return -1;
+                                else if (!aDir && bDir) return 1;
+                                else {
+                                    // then filename ascending
+                                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                                }
+                            })
+                            .map(entry => {
+                                const base = pathutils.basename(entry.path);
+
+                                return {
+                                    icon: icons.getForType(entry.type),
+                                    label: base,
+                                    path: pathutils.join(this.path, base),
+                                    getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
+                                    selected: false,
+                                    entry
+                                }
+                            });
+                    } catch (e) {
+                        if (e.message == "Unauthorized"){
+                            this.$emit('unauthorized');
+                        }else{
+                            console.error(e);
+                        }
+                        return [];
+                    }
+                };
+
+                try {
+                    const entry = n.entry || (await ddb.fetchEntries(n.path, {
+                        withHash: false
+                    }))[0];
+
+                    this.nodes.push({
+                        icon: n.icon,
+                        label: n.label,
+                        path: n.path,
+                        getChildren,
+                        selected: false,
+                        expanded: !!n.expanded,
+                        root: true,
+                        entry
+                    });
+                } catch(e){
+                    if (e.message == "Unauthorized"){
+                        this.$emit('unauthorized');
+                    }else{
+                        console.error(e);
+                    }
+                }
+            }
+
+            this.loading = false;
+        },
         handleSelectionChanged: function (selectedNodes) {
             // Keep track of nodes for "Open Item Location"
             if (selectedNodes.length > 0) this.lastSelectedNode = selectedNodes[selectedNodes.length - 1];

@@ -51,6 +51,19 @@ export default {
       if (this.node.expanded){
           this.handleOpenDblClick(new CustomEvent('click'));
       }
+
+      this.$root.$on('entryChanged', (oldPath, newPath) => {
+
+          if (!this.loadedChildren) return;
+
+          var nodes = this.children.filter(n => n.entry.path == oldPath);
+          if (nodes.length == 0) return;
+          var node = nodes[0];
+          console.log(node);
+          // Rename / move entry
+          //debugger;
+          
+      });
   },
   methods: {
       onClick: function(e){
