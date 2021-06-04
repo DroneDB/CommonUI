@@ -29,6 +29,9 @@
 <script>
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
+import { clone } from '../classes/utils';
+import ddb from 'ddb';
+const { pathutils } = ddb;
 
 export default {
   props: {
@@ -47,25 +50,27 @@ export default {
           expanded: false,
       }
   },
-  mounted: function(){
-      if (this.node.expanded){
-          this.handleOpenDblClick(new CustomEvent('click'));
-      }
+    mounted: function(){
+        if (this.node.expanded){
+            this.handleOpenDblClick(new CustomEvent('click'));
+        }
 
-      this.$root.$on('entryChanged', (oldPath, newPath) => {
+        this.$root.$on('selectNode', (path) => {
 
-          if (!this.loadedChildren) return;
+            var els = this.children.filter(item => item.entry.path == path);
 
-          var nodes = this.children.filter(n => n.entry.path == oldPath);
-          if (nodes.length == 0) return;
-          var node = nodes[0];
-          console.log(node);
-          // Rename / move entry
-          //debugger;
-          
-      });
-  },
-  methods: {
+            if (els.length == 0) return;
+
+            var el = els[0];
+            console.log("select: " + path);
+            console.log(clone(el));
+            debugger;
+            this.handleOpenDblClick(new CustomEvent('click'));
+
+        });
+
+    },
+    methods: {
       onClick: function(e){
           Keyboard.updateState(e);
           this.$emit('selected', this, Mouse.LEFT);
@@ -81,6 +86,7 @@ export default {
           return this._handleOpen(e, "caret");
       },
       _handleOpen: async function(e, sender){
+          debugger;
           e.stopPropagation();
           if (Keyboard.isModifierPressed()) return; // We are selecting
           

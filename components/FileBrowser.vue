@@ -17,8 +17,10 @@ import {
 } from 'commonui/dynamic/menu';
 import shell from 'commonui/dynamic/shell';
 import ddb from 'ddb';
-const { pathutils } = ddb;
 import icons from '../classes/icons';
+import { clone } from '../classes/utils';
+
+const { pathutils } = ddb;
 
 export default {
     components: {
@@ -56,6 +58,23 @@ export default {
         }]);
 
         await this.refreshNodes();
+
+        this.$root.$on('refreshEntries', async (action, arg1, arg2) => {
+          
+            var selectedPath = this.lastSelectedNode?.node.entry.path;
+
+            //console.log(selectedPath);
+
+            await this.refreshNodes();
+
+            if (selectedPath != null)
+            {
+                var parent = pathutils.getParentFolder(selectedPath);
+                if (parent != null)
+                    this.$root.$emit('selectNode', parent);
+
+            }
+        });
     },
     beforeDestroy: function () {
         unregisterContextMenu(this.$el);
@@ -63,9 +82,12 @@ export default {
     methods: {
 
         refreshNodes: async function() {
+
+            this.nodes = [];
+
             const rootNodes = await this.rootNodes();
 
-            for (let i = 0; i < rootNodes.length; i++){
+            for (let i = 0; i < rootNodes.length; i++) {
                 const n = rootNodes[i];
                 const getChildren = async function () {
                     try {
