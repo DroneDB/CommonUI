@@ -144,7 +144,7 @@ export default {
                     this.loading = false;
                 }
 
-                this.$emit("folderOpened", file.children);
+                this.$emit("folderOpened", file.children, file.entry.path);
             } else {
                 shell.openItem(file.path);
             }

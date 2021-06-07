@@ -67,13 +67,14 @@ export default {
 
             await this.refreshNodes();
 
+            /* THIS DOES NOT WORK
             if (selectedPath != null)
             {
                 var parent = pathutils.getParentFolder(selectedPath);
                 if (parent != null)
                     this.$root.$emit('selectNode', parent);
 
-            }
+            }*/
         });
     },
     beforeDestroy: function () {

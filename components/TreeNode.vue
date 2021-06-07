@@ -50,12 +50,12 @@ export default {
           expanded: false,
       }
   },
-    mounted: function(){
+    mounted: async function(){
         if (this.node.expanded){
-            this.handleOpenDblClick(new CustomEvent('click'));
+            await this.handleOpenDblClick(new CustomEvent('click'));
         }
-
-        this.$root.$on('selectNode', (path) => {
+        /* THIS DOES NOT WORK
+        this.$root.$on('selectNode', async (path) => {
 
             var els = this.children.filter(item => item.entry.path == path);
 
@@ -65,10 +65,10 @@ export default {
             console.log("select: " + path);
             console.log(clone(el));
             debugger;
-            this.handleOpenDblClick(new CustomEvent('click'));
+            await this.handleOpenDblClick(new CustomEvent('click'));
 
-        });
-
+        });*/
+        
     },
     methods: {
       onClick: function(e){
@@ -86,7 +86,6 @@ export default {
           return this._handleOpen(e, "caret");
       },
       _handleOpen: async function(e, sender){
-          debugger;
           e.stopPropagation();
           if (Keyboard.isModifierPressed()) return; // We are selecting
           
