@@ -54,21 +54,16 @@ export default {
         if (this.node.expanded){
             await this.handleOpenDblClick(new CustomEvent('click'));
         }
-        /* THIS DOES NOT WORK
-        this.$root.$on('selectNode', async (path) => {
 
-            var els = this.children.filter(item => item.entry.path == path);
+        this.$root.$on('deletedEntries', async (deleted) => {
+            
+            var els = this.children.filter(item => deleted.includes(item.entry.path));
 
             if (els.length == 0) return;
 
-            var el = els[0];
-            console.log("select: " + path);
-            console.log(clone(el));
-            debugger;
-            await this.handleOpenDblClick(new CustomEvent('click'));
-
-        });*/
-        
+            this.children = this.children.filter(item => !deleted.includes(item.entry.path));
+        });
+       
     },
     methods: {
       onClick: function(e){
