@@ -32,6 +32,8 @@ import Mouse from '../mouse';
 import { clone } from '../classes/utils';
 import ddb from 'ddb';
 const { pathutils } = ddb;
+import icons from '../classes/icons';
+//import getChildren from '../classes/helpers';
 
 export default {
   props: {
@@ -63,6 +65,97 @@ export default {
 
             this.children = this.children.filter(item => !deleted.includes(item.entry.path));
         });
+
+/*        this.$root.$on('addEntries', async (entries) => {
+            
+            var parentPath = pathutils.getParentFolder(entries[0].path);
+
+            if (parentPath == null) {
+                if (!this.node.root) return;
+            } else 
+                if (parentPath != this.node.path) return;
+
+            console.log("createFolder in " + this.node.path);
+
+
+            this.children = this.children.filter(ch => entries.filter(e => e.path == ch.entry.path).length == 0);
+
+            for(var entry of entries) {
+
+                const getChildren = async function () {
+                    try {
+                        const entries = await ddb.fetchEntries(this.path, {
+                            withHash: false,
+                            recursive: true,
+                            maxRecursionDepth: 1,
+                            stopOnError: false
+                        });
+
+                        return entries.filter(entry => {
+                                return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
+                            })
+                            .sort((a, b) => {
+                                // Folders first
+                                let aDir = ddb.entry.isDirectory(a);
+                                let bDir = ddb.entry.isDirectory(b);
+
+                                if (aDir && !bDir) return -1;
+                                else if (!aDir && bDir) return 1;
+                                else {
+                                    // then filename ascending
+                                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                                }
+                            })
+                            .map(entry => {
+                                const base = pathutils.basename(entry.path);
+
+                                return {
+                                    icon: icons.getForType(entry.type),
+                                    label: base,
+                                    path: pathutils.join(this.path, base),
+                                    getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
+                                    selected: false,
+                                    entry
+                                }
+                            });
+                    } catch (e) {
+                        if (e.message == "Unauthorized"){
+                            this.$emit('unauthorized');
+                        }else{
+                            console.error(e);
+                        }
+                        return [];
+                    }
+                };
+
+                const base = pathutils.basename(entry.path);
+
+                this.children.push({
+                    icon: icons.getForType(entry.type),
+                    label: base,
+                    path: pathutils.join(this.node.path, base),
+                    getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
+                    selected: false,
+                    entry
+                });
+
+            }
+
+            this.children = this.children.sort((a, b) => {
+                                // Folders first
+                                let aDir = ddb.entry.isDirectory(a);
+                                let bDir = ddb.entry.isDirectory(b);
+
+                                if (aDir && !bDir) return -1;
+                                else if (!aDir && bDir) return 1;
+                                else {
+                                    // then filename ascending
+                                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                                }
+                            });
+            
+
+        });*/
        
     },
     methods: {

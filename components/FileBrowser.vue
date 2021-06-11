@@ -59,6 +59,12 @@ export default {
 
         await this.refreshNodes();
 
+        this.$root.$on('addEntries', async (entries) => {
+
+            
+        });
+
+
         /*
         this.$root.$on('refreshEntries', async (action, arg1, arg2) => {
           
@@ -82,6 +88,7 @@ export default {
         unregisterContextMenu(this.$el);
     },
     methods: {
+
 
         refreshNodes: async function() {
 
