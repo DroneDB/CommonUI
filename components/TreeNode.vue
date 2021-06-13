@@ -8,8 +8,8 @@
             <i class="icon circle notch spin" v-if="loading" />
             <i class="icon" @click="handleOpenCaret"
                             :class="expanded ? 'caret down' : 'caret right'" 
-                            v-if="node.getChildren && !loading && !empty" />
-            <i class="icon nonexistant" v-if="!node.getChildren || empty" />
+                            v-if="node.isExpandable && !loading && !empty" />
+            <i class="icon nonexistant" v-if="!node.isExpandable || empty" />
 
             <i class="icon" :class="node.icon" />
             <div class="text">{{ node.label }}</div>
@@ -19,6 +19,7 @@
                     :node="node"
                     :key="node.path" 
                     ref="nodes"
+                    :getChildren="getChildren"
                     @selected="$emit('selected', $event, arguments[1])"
                     @opened="$emit('opened', $event, arguments[1])"
                      />
@@ -33,13 +34,16 @@ import { clone } from '../classes/utils';
 import ddb from 'ddb';
 const { pathutils } = ddb;
 import icons from '../classes/icons';
-//import getChildren from '../classes/helpers';
 
 export default {
   props: {
       node: {
           type: Object
-      }
+      },
+      getChildren: {
+        type: Function,
+        required: true
+    }
   },
   components: { TreeNode: () => import('./TreeNode.vue') },
   data: function(){
@@ -66,7 +70,7 @@ export default {
             this.children = this.children.filter(item => !deleted.includes(item.entry.path));
         });
 
-/*        this.$root.$on('addEntries', async (entries) => {
+        this.$root.$on('addEntries', async (entries) => {
             
             var parentPath = pathutils.getParentFolder(entries[0].path);
 
@@ -77,56 +81,9 @@ export default {
 
             console.log("createFolder in " + this.node.path);
 
-
             this.children = this.children.filter(ch => entries.filter(e => e.path == ch.entry.path).length == 0);
 
             for(var entry of entries) {
-
-                const getChildren = async function () {
-                    try {
-                        const entries = await ddb.fetchEntries(this.path, {
-                            withHash: false,
-                            recursive: true,
-                            maxRecursionDepth: 1,
-                            stopOnError: false
-                        });
-
-                        return entries.filter(entry => {
-                                return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
-                            })
-                            .sort((a, b) => {
-                                // Folders first
-                                let aDir = ddb.entry.isDirectory(a);
-                                let bDir = ddb.entry.isDirectory(b);
-
-                                if (aDir && !bDir) return -1;
-                                else if (!aDir && bDir) return 1;
-                                else {
-                                    // then filename ascending
-                                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
-                                }
-                            })
-                            .map(entry => {
-                                const base = pathutils.basename(entry.path);
-
-                                return {
-                                    icon: icons.getForType(entry.type),
-                                    label: base,
-                                    path: pathutils.join(this.path, base),
-                                    getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
-                                    selected: false,
-                                    entry
-                                }
-                            });
-                    } catch (e) {
-                        if (e.message == "Unauthorized"){
-                            this.$emit('unauthorized');
-                        }else{
-                            console.error(e);
-                        }
-                        return [];
-                    }
-                };
 
                 const base = pathutils.basename(entry.path);
 
@@ -134,28 +91,28 @@ export default {
                     icon: icons.getForType(entry.type),
                     label: base,
                     path: pathutils.join(this.node.path, base),
-                    getChildren: ddb.entry.isDirectory(entry) ? getChildren : null,
                     selected: false,
-                    entry
+                    entry,
+                    isExpandable: ddb.entry.isDirectory(entry)
                 });
 
             }
 
             this.children = this.children.sort((a, b) => {
-                                // Folders first
-                                let aDir = ddb.entry.isDirectory(a);
-                                let bDir = ddb.entry.isDirectory(b);
+                // Folders first
+                let aDir = ddb.entry.isDirectory(a);
+                let bDir = ddb.entry.isDirectory(b);
 
-                                if (aDir && !bDir) return -1;
-                                else if (!aDir && bDir) return 1;
-                                else {
-                                    // then filename ascending
-                                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
-                                }
-                            });
+                if (aDir && !bDir) return -1;
+                else if (!aDir && bDir) return 1;
+                else {
+                    // then filename ascending
+                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                }
+            });
             
 
-        });*/
+        });
        
     },
     methods: {
@@ -177,14 +134,14 @@ export default {
           e.stopPropagation();
           if (Keyboard.isModifierPressed()) return; // We are selecting
           
-          if (this.node.getChildren && !this.loadedChildren){
+          if (this.node.isExpandable && !this.loadedChildren){
             this.loading = true;
             try{
-                this.children = await this.node.getChildren();
+                this.children = await this.getChildren(this.node.path);
                 this.loadedChildren = true;
 
                 // Empty?
-                if (!this.children) this.node.getChildren = null;
+                //if (!this.children) this.node.getChildren = null;
             }catch(e){
                 console.warn(e);
             }
@@ -195,7 +152,7 @@ export default {
           if (this.loadedChildren && this.children.length === 0){
             this.empty = true;
             this.expanded = false;
-          }else if (this.node.getChildren){
+          }else if (this.node.isExpandable){
             // Toggle
             this.expanded = !this.expanded;
           }

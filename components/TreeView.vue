@@ -5,7 +5,8 @@
                     :key="node.path"
                     ref="treeNodes"
                     @selected="handleSelection"
-                    @opened="handleOpen" />
+                    @opened="handleOpen"
+                    :getChildren="getChildren" />
     </div>
 </template>
 
@@ -18,7 +19,17 @@ export default {
   components: {
       TreeNode
   },
-  props: ['nodes'],
+  props: {
+        nodes: {
+            type: Array,
+            required: true
+        },
+        getChildren: {
+            type: Function,
+            required: true
+        }
+    },
+
   mounted: function(){
     this.selectedNodes = [];
     this.rangeStartNode = null;
