@@ -61,13 +61,33 @@ export default {
             await this.handleOpenDblClick(new CustomEvent('click'));
         }
 
+        function sortNodes(nodes) {
+            return nodes.sort((n1, n2) => {
+
+                var a = n1.entry;
+                var b = n2.entry;
+
+                // Folders first
+                let aDir = ddb.entry.isDirectory(a);
+                let bDir = ddb.entry.isDirectory(b);
+
+                if (aDir && !bDir) return -1;
+                else if (!aDir && bDir) return 1;
+                else {
+                    // then filename ascending
+                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                }
+            });
+        }
+
         this.$root.$on('deletedEntries', async (deleted) => {
             
             var els = this.children.filter(item => deleted.includes(item.entry.path));
 
             if (els.length == 0) return;
 
-            this.children = this.children.filter(item => !deleted.includes(item.entry.path));
+            this.children = sortNodes(this.children.filter(item => !deleted.includes(item.entry.path)));
+
         });
 
         this.$root.$on('addEntries', async (entries) => {
@@ -98,18 +118,7 @@ export default {
 
             }
 
-            this.children = this.children.sort((a, b) => {
-                // Folders first
-                let aDir = ddb.entry.isDirectory(a);
-                let bDir = ddb.entry.isDirectory(b);
-
-                if (aDir && !bDir) return -1;
-                else if (!aDir && bDir) return 1;
-                else {
-                    // then filename ascending
-                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
-                }
-            });
+            this.children = sortNodes(this.children);            
             
 
         });
