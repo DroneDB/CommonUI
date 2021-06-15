@@ -72,7 +72,11 @@ export default {
 
         this.$root.$on('addEntries', async (entries) => {
             
+            console.log("In addEntries");
+            console.log(clone(entries));
+
             var parentPath = pathutils.getParentFolder(entries[0].path);
+            console.log(clone(parentPath));
 
             if (parentPath == null) {
                 if (!this.node.root) return;
@@ -80,7 +84,7 @@ export default {
                 if (parentPath != this.node.path) return;
 
             console.log("createFolder in " + this.node.path);
-
+            debugger;
             this.children = this.children.filter(ch => entries.filter(e => e.path == ch.entry.path).length == 0);
 
             for(var entry of entries) {
@@ -98,7 +102,11 @@ export default {
 
             }
 
-            this.children = this.children.sort((a, b) => {
+            this.children = this.children.sort((n1, n2) => {
+
+                var a = n1.entry;
+                var b = n2.entry;
+                
                 // Folders first
                 let aDir = ddb.entry.isDirectory(a);
                 let bDir = ddb.entry.isDirectory(b);
@@ -116,49 +124,70 @@ export default {
        
     },
     methods: {
-      onClick: function(e){
-          Keyboard.updateState(e);
-          this.$emit('selected', this, Mouse.LEFT);
-      },
-      onRightClick: function(e){
-          Keyboard.updateState(e);
-          this.$emit('selected', this, Mouse.RIGHT);
-      },
-      handleOpenDblClick: async function(e){
-          return this._handleOpen(e, "dblclick");
-      },
-      handleOpenCaret: async function(e){
-          return this._handleOpen(e, "caret");
-      },
-      _handleOpen: async function(e, sender){
-          e.stopPropagation();
-          if (Keyboard.isModifierPressed()) return; // We are selecting
-          
-          if (this.node.isExpandable && !this.loadedChildren){
-            this.loading = true;
-            try{
-                this.children = await this.getChildren(this.node.path);
-                this.loadedChildren = true;
+        onClick: function(e){
+            Keyboard.updateState(e);
+            this.$emit('selected', this, Mouse.LEFT);
+        },
+        onRightClick: function(e){
+            Keyboard.updateState(e);
+            this.$emit('selected', this, Mouse.RIGHT);
+        },
+        handleOpenDblClick: async function(e){
+            return this._handleOpen(e, "dblclick");
+        },
+        handleOpenCaret: async function(e){
+            return this._handleOpen(e, "caret");
+        },
 
-                // Empty?
-                //if (!this.children) this.node.getChildren = null;
-            }catch(e){
-                console.warn(e);
+        loadChildren: async function() {
+
+            console.log("In loadChildren");
+            //debugger;
+            if (this.node.isExpandable && !this.loadedChildren){
+                this.loading = true;
+                try{
+                    this.children = await this.getChildren(this.node.path);
+                    this.loadedChildren = true;
+
+                    // Empty?
+                    //if (!this.children) this.node.getChildren = null;
+                }catch(e){
+                    console.warn(e);
+                }
+                this.loading = false;
             }
-            this.loading = false;
-          }
+        },
 
-          // Empty?
-          if (this.loadedChildren && this.children.length === 0){
-            this.empty = true;
-            this.expanded = false;
-          }else if (this.node.isExpandable){
-            // Toggle
-            this.expanded = !this.expanded;
-          }
+        expand: async function(sender) {
+            
+            console.log("In expand");
+            console.log(clone(sender));
 
-          this.$emit('opened', this, sender);
-      }
+            await this.loadChildren();
+
+            // Empty?
+            if (this.loadedChildren && this.children.length === 0){
+                this.empty = true;
+                this.expanded = false;
+            }else if (this.node.isExpandable){
+                // Toggle
+                this.expanded = !this.expanded;
+            }
+
+            this.$emit('opened', this, sender);
+        },
+
+        _handleOpen: async function(e, sender){
+
+            console.log("In _handleOpen");
+            console.log(clone(e));
+            console.log(clone(sender));
+
+            e.stopPropagation();
+            if (Keyboard.isModifierPressed()) return; // We are selecting
+
+            await this.expand(sender);          
+        }
   }
 }
 </script>

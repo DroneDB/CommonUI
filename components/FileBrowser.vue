@@ -59,6 +59,7 @@ export default {
 
         await this.refreshNodes();
 
+
         this.$root.$on('addEntries', async (entries) => {
 
             
@@ -170,10 +171,18 @@ export default {
                 }
             }
 
+            console.log("Done refresh nodes: " + this.nodes.length);
+
+            //this.nodes[0].expand();
+
             this.loading = false;
         },
 
-        handleSelectionChanged: function (selectedNodes) {
+        handleSelectionChanged: async function (selectedNodes) {
+
+            console.log("In handleSelectionChanged");
+            console.log(clone(selectedNodes.map((n) => n.node)));
+
             // Keep track of nodes for "Open Item Location"
             if (selectedNodes.length > 0) this.lastSelectedNode = selectedNodes[selectedNodes.length - 1];
             else this.lastSelectedNode = null;
@@ -182,23 +191,38 @@ export default {
             // we select it's children instead.
             if (selectedNodes.length === 1) {
                 const n = selectedNodes[0];
-                if (n.expanded && n.$children && n.$children.length > 0) {
-                    selectedNodes = n.$children;
+                if (n.expanded) {
+                    if (n.$children && n.$children.length > 0)
+                        selectedNodes = n.$children;
+                } else if (n.node.isExpandable) {
+                    // Let's expand it
+                    await n.loadChildren();                    
+                    this.$emit('selectionChanged', n.children, n.node.entry.path);
+
+                    return;
+
                 }
             }
 
             this.$emit('selectionChanged', selectedNodes.map(n => n.node));
         },
         handleOpen: function (component, sender) {
-            const node = component.node;
 
+            console.log("In handleOpen");
+            console.log(clone(component.node));
+            console.log(clone(sender));
+
+            const node = component.node;
+            //debugger;
             // Open file in default program
             if (!ddb.entry.isDirectory(node.entry)) {
                 shell.openItem(node.path);
             } else {
                 // Select children of item
                 if (component.children && sender === "dblclick") {
-                    this.$emit('selectionChanged', component.children);
+                    
+                    // This could lead to problems if we nest multiple DRONEDBs
+                    this.$emit('selectionChanged', component.children, node.entry.type == ddb.entry.type.DRONEDB ? null : node.entry.path);
                 }
             }
         }

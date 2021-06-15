@@ -14,6 +14,8 @@
 import TreeNode from './TreeNode.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
+import ddb from 'ddb';
+const { pathutils } = ddb;
 
 export default {
   components: {
@@ -67,8 +69,8 @@ export default {
             this.selectedNodes = [node];
             this.rangeStartNode = node;
           }
-
-          this.$emit("selectionChanged", this.selectedNodes);
+          
+          this.$emit("selectionChanged", this.selectedNodes, this.selectedNodes.length > 0 ? pathutils.getParentFolder(this.selectedNodes[0].node.entry.path) : null);
       },
 
       selectRange: function(low, high, nodes){
