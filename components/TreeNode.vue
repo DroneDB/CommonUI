@@ -61,7 +61,7 @@ export default {
             await this.handleOpenDblClick(new CustomEvent('click'));
         }
 
-        this.$root.$on('deletedEntries', async (deleted) => {
+        this.$root.$on('deleteEntries', async (deleted) => {
             
             var els = this.children.filter(item => deleted.includes(item.entry.path));
 
@@ -70,55 +70,34 @@ export default {
             this.children = this.children.filter(item => !deleted.includes(item.entry.path));
         });
 
-        this.$root.$on('addEntries', async (entries) => {
+        this.$root.$on('addItems', async (items) => {
             
-            console.log("In addEntries");
-            console.log(clone(entries));
+            if (items.length == 0) {
+                console.log("In addItems 0");
+                return;
+            }
 
-            var parentPath = pathutils.getParentFolder(entries[0].path);
+            var parentPath = pathutils.getParentFolder(items[0].entry.path);
+
+            /*console.log("In addEntries");
             console.log(clone(parentPath));
+*/
 
             if (parentPath == null) {
                 if (!this.node.root) return;
             } else 
-                if (parentPath != this.node.path) return;
+                if (parentPath != this.node.entry.path) return;
 
-            console.log("createFolder in " + this.node.path);
-            debugger;
-            this.children = this.children.filter(ch => entries.filter(e => e.path == ch.entry.path).length == 0);
+            console.log("addItems in " + this.node.entry.path);
+            console.log(clone(this.node));
+            console.log(clone(items));
 
-            for(var entry of entries) {
-
-                const base = pathutils.basename(entry.path);
-
-                this.children.push({
-                    icon: icons.getForType(entry.type),
-                    label: base,
-                    path: pathutils.join(this.node.path, base),
-                    selected: false,
-                    entry,
-                    isExpandable: ddb.entry.isDirectory(entry)
-                });
-
-            }
-
-            this.children = this.children.sort((n1, n2) => {
-
-                var a = n1.entry;
-                var b = n2.entry;
-                
-                // Folders first
-                let aDir = ddb.entry.isDirectory(a);
-                let bDir = ddb.entry.isDirectory(b);
-
-                if (aDir && !bDir) return -1;
-                else if (!aDir && bDir) return 1;
-                else {
-                    // then filename ascending
-                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
-                }
-            });
+            this.children = this.children.filter(ch => items.filter(i => i.entry.path == ch.entry.path).length == 0);
             
+            for(var item of items)
+                this.children.push(item);
+
+            this.sortChildren();            
 
         });
        
@@ -137,6 +116,27 @@ export default {
         },
         handleOpenCaret: async function(e){
             return this._handleOpen(e, "caret");
+        },
+
+        sortChildren: function() {
+            this.children = this.children.sort((n1, n2) => {
+
+                var a = n1.entry;
+                var b = n2.entry;
+                
+                // Folders first
+                let aDir = ddb.entry.isDirectory(a);
+                let bDir = ddb.entry.isDirectory(b);
+
+                if (aDir && !bDir) return -1;
+                else if (!aDir && bDir) return 1;
+                else {
+                  
+                    // then filename ascending
+                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+
+                }
+            });
         },
 
         loadChildren: async function() {

@@ -60,30 +60,6 @@ export default {
         await this.refreshNodes();
 
 
-        this.$root.$on('addEntries', async (entries) => {
-
-            
-        });
-
-
-        /*
-        this.$root.$on('refreshEntries', async (action, arg1, arg2) => {
-          
-            var selectedPath = this.lastSelectedNode?.node.entry.path;
-
-            //console.log(selectedPath);
-
-            await this.refreshNodes();
-
-            /* THIS DOES NOT WORK
-            if (selectedPath != null)
-            {
-                var parent = pathutils.getParentFolder(selectedPath);
-                if (parent != null)
-                    this.$root.$emit('selectNode', parent);
-
-            }*//*
-        });*/
     },
     beforeDestroy: function () {
         unregisterContextMenu(this.$el);
