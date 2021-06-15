@@ -70,6 +70,14 @@ export default {
             this.children = this.children.filter(item => !deleted.includes(item.entry.path));
         });
 
+        this.$root.$on('folderOpened', async (folder) => {
+
+            if (this.node.entry.path == folder.entry.path) {
+                await this.handleOpenDblClick(new CustomEvent('click'));
+                return;
+            }
+        });
+
         this.$root.$on('addItems', async (items) => {
             
             if (items.length == 0) {
