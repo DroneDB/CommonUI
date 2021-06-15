@@ -105,9 +105,9 @@ export default {
                     });
             } catch (e) {
                 if (e.message == "Unauthorized"){
-                    this.$emit('unauthorized');
-                }else{
-                    console.error(e);
+                    this.$emit('error', "You are not allowed to perform this action", "Load entries");
+                } else {
+                    this.$emit('error', e, "Load entries");
                 }
                 return [];
             }
@@ -117,6 +117,8 @@ export default {
         refreshNodes: async function() {
 
             this.nodes = [];
+
+            this.loading = true;
 
             const rootNodes = await this.rootNodes();
 
@@ -138,26 +140,19 @@ export default {
                         entry,
                         isExpandable: true
                     });
-                } catch(e){
+                } catch(e) {
                     if (e.message == "Unauthorized"){
-                        this.$emit('unauthorized');
-                    }else{
-                        console.error(e);
+                        this.$emit('error', "You are not allowed to perform this action", "Load entries");
+                    } else {
+                        this.$emit('error', e, "Load entries");
                     }
                 }
             }
-
-            console.log("Done refresh nodes: " + this.nodes.length);
-
-            //this.nodes[0].expand();
 
             this.loading = false;
         },
 
         handleSelectionChanged: async function (selectedNodes) {
-
-            console.log("In handleSelectionChanged");
-            console.log(clone(selectedNodes.map((n) => n.node)));
 
             // Keep track of nodes for "Open Item Location"
             if (selectedNodes.length > 0) this.lastSelectedNode = selectedNodes[selectedNodes.length - 1];
@@ -184,12 +179,8 @@ export default {
         },
         handleOpen: function (component, sender) {
 
-            console.log("In handleOpen");
-            console.log(clone(component.node));
-            console.log(clone(sender));
-
             const node = component.node;
-            //debugger;
+
             // Open file in default program
             if (!ddb.entry.isDirectory(node.entry)) {
                 shell.openItem(node.path);

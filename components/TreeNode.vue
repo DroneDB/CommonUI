@@ -72,36 +72,28 @@ export default {
 
         this.$root.$on('folderOpened', async (folder) => {
 
-            if (this.node.entry.path == folder.entry.path) {
-                await this.handleOpenDblClick(new CustomEvent('click'));
-                return;
-            }
+            // If we are the folder to open, let's do it!
+            if (this.node.entry.path == folder.entry.path) 
+                await this.handleOpenDblClick(new CustomEvent('click'));                
+            
         });
 
         this.$root.$on('addItems', async (items) => {
             
-            if (items.length == 0) {
-                console.log("In addItems 0");
+            if (items.length == 0) 
                 return;
-            }
-
+            
             var parentPath = pathutils.getParentFolder(items[0].entry.path);
 
-            /*console.log("In addEntries");
-            console.log(clone(parentPath));
-*/
-
-            if (parentPath == null) {
+            if (parentPath == null) 
                 if (!this.node.root) return;
-            } else 
+            else 
                 if (parentPath != this.node.entry.path) return;
 
-            console.log("addItems in " + this.node.entry.path);
-            console.log(clone(this.node));
-            console.log(clone(items));
-
+            // Let's remove first the duplicates
             this.children = this.children.filter(ch => items.filter(i => i.entry.path == ch.entry.path).length == 0);
             
+            // Add new items
             for(var item of items)
                 this.children.push(item);
 
@@ -149,28 +141,18 @@ export default {
 
         loadChildren: async function() {
 
-            console.log("In loadChildren");
-            //debugger;
             if (this.node.isExpandable && !this.loadedChildren){
                 this.loading = true;
-                try{
-                    this.children = await this.getChildren(this.node.path);
-                    this.loadedChildren = true;
+                
+                this.children = await this.getChildren(this.node.path);
+                this.loadedChildren = true;
 
-                    // Empty?
-                    //if (!this.children) this.node.getChildren = null;
-                }catch(e){
-                    console.warn(e);
-                }
                 this.loading = false;
             }
         },
 
         expand: async function(sender) {
             
-            console.log("In expand");
-            console.log(clone(sender));
-
             await this.loadChildren();
 
             // Empty?
@@ -186,10 +168,6 @@ export default {
         },
 
         _handleOpen: async function(e, sender){
-
-            console.log("In _handleOpen");
-            console.log(clone(e));
-            console.log(clone(sender));
 
             e.stopPropagation();
             if (Keyboard.isModifierPressed()) return; // We are selecting

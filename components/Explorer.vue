@@ -144,8 +144,8 @@ export default {
                     thumb.loading = false;
                     this.loading = false;
                 }
-                debugger;*/
-                this.$root.$emit("folderOpened", file);//, file.entry.path);
+                */
+                this.$root.$emit("folderOpened", file);
             } else {
                 shell.openItem(file.path);
             }
