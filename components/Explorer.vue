@@ -132,7 +132,8 @@ export default {
             if (entry.isDirectory(file.entry)) {
                 // Expand directory
                 // TODO: can we/should we cache results?
-                if (file.getChildren && !file.children) {
+                //if (file.getChildren && !file.children) {
+                /*if (file.isExpandable)
                     thumb.loading = true;
                     this.loading = true;
                     try {
@@ -143,8 +144,8 @@ export default {
                     thumb.loading = false;
                     this.loading = false;
                 }
-
-                this.$emit("folderOpened", file.children, file.entry.path);
+                */
+                this.$root.$emit("folderOpened", file);
             } else {
                 shell.openItem(file.path);
             }

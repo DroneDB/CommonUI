@@ -61,26 +61,7 @@ export default {
             await this.handleOpenDblClick(new CustomEvent('click'));
         }
 
-        function sortNodes(nodes) {
-            return nodes.sort((n1, n2) => {
-
-                var a = n1.entry;
-                var b = n2.entry;
-
-                // Folders first
-                let aDir = ddb.entry.isDirectory(a);
-                let bDir = ddb.entry.isDirectory(b);
-
-                if (aDir && !bDir) return -1;
-                else if (!aDir && bDir) return 1;
-                else {
-                    // then filename ascending
-                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
-                }
-            });
-        }
-
-        this.$root.$on('deletedEntries', async (deleted) => {
+        this.$root.$on('deleteEntries', async (deleted) => {
             
             var els = this.children.filter(item => deleted.includes(item.entry.path));
 
@@ -90,84 +71,110 @@ export default {
 
         });
 
-        this.$root.$on('addEntries', async (entries) => {
-            
-            var parentPath = pathutils.getParentFolder(entries[0].path);
+        this.$root.$on('folderOpened', async (folder) => {
 
-            if (parentPath == null) {
+            // If we are the folder to open, let's do it!
+            if (this.node.entry.path == folder.entry.path) 
+                await this.handleOpenDblClick(new CustomEvent('click'));                
+            
+        });
+
+        this.$root.$on('addItems', async (items) => {
+            
+            if (items.length == 0) 
+                return;
+            
+            var parentPath = pathutils.getParentFolder(items[0].entry.path);
+
+            if (parentPath == null) 
                 if (!this.node.root) return;
-            } else 
-                if (parentPath != this.node.path) return;
+            else 
+                if (parentPath != this.node.entry.path) return;
 
-            console.log("createFolder in " + this.node.path);
-
-            this.children = this.children.filter(ch => entries.filter(e => e.path == ch.entry.path).length == 0);
-
-            for(var entry of entries) {
-
-                const base = pathutils.basename(entry.path);
-
-                this.children.push({
-                    icon: icons.getForType(entry.type),
-                    label: base,
-                    path: pathutils.join(this.node.path, base),
-                    selected: false,
-                    entry,
-                    isExpandable: ddb.entry.isDirectory(entry)
-                });
-
-            }
-
-            this.children = sortNodes(this.children);            
+            // Let's remove first the duplicates
+            this.children = this.children.filter(ch => items.filter(i => i.entry.path == ch.entry.path).length == 0);
             
+            // Add new items
+            for(var item of items)
+                this.children.push(item);
+
+            this.sortChildren();            
 
         });
        
     },
     methods: {
-      onClick: function(e){
-          Keyboard.updateState(e);
-          this.$emit('selected', this, Mouse.LEFT);
-      },
-      onRightClick: function(e){
-          Keyboard.updateState(e);
-          this.$emit('selected', this, Mouse.RIGHT);
-      },
-      handleOpenDblClick: async function(e){
-          return this._handleOpen(e, "dblclick");
-      },
-      handleOpenCaret: async function(e){
-          return this._handleOpen(e, "caret");
-      },
-      _handleOpen: async function(e, sender){
-          e.stopPropagation();
-          if (Keyboard.isModifierPressed()) return; // We are selecting
-          
-          if (this.node.isExpandable && !this.loadedChildren){
-            this.loading = true;
-            try{
+        onClick: function(e){
+            Keyboard.updateState(e);
+            this.$emit('selected', this, Mouse.LEFT);
+        },
+        onRightClick: function(e){
+            Keyboard.updateState(e);
+            this.$emit('selected', this, Mouse.RIGHT);
+        },
+        handleOpenDblClick: async function(e){
+            return this._handleOpen(e, "dblclick");
+        },
+        handleOpenCaret: async function(e){
+            return this._handleOpen(e, "caret");
+        },
+
+        sortChildren: function() {
+            this.children = this.children.sort((n1, n2) => {
+
+                var a = n1.entry;
+                var b = n2.entry;
+                
+                // Folders first
+                let aDir = ddb.entry.isDirectory(a);
+                let bDir = ddb.entry.isDirectory(b);
+
+                if (aDir && !bDir) return -1;
+                else if (!aDir && bDir) return 1;
+                else {
+                  
+                    // then filename ascending
+                    return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+
+                }
+            });
+        },
+
+        loadChildren: async function() {
+
+            if (this.node.isExpandable && !this.loadedChildren){
+                this.loading = true;
+                
                 this.children = await this.getChildren(this.node.path);
                 this.loadedChildren = true;
 
-                // Empty?
-                //if (!this.children) this.node.getChildren = null;
-            }catch(e){
-                console.warn(e);
+                this.loading = false;
             }
-            this.loading = false;
-          }
+        },
 
-          // Empty?
-          if (this.loadedChildren && this.children.length === 0){
-            this.empty = true;
-            this.expanded = false;
-          }else if (this.node.isExpandable){
-            // Toggle
-            this.expanded = !this.expanded;
-          }
+        expand: async function(sender) {
+            
+            await this.loadChildren();
 
-          this.$emit('opened', this, sender);
-      }
+            // Empty?
+            if (this.loadedChildren && this.children.length === 0){
+                this.empty = true;
+                this.expanded = false;
+            }else if (this.node.isExpandable){
+                // Toggle
+                this.expanded = !this.expanded;
+            }
+
+            this.$emit('opened', this, sender);
+        },
+
+        _handleOpen: async function(e, sender){
+
+            e.stopPropagation();
+            if (Keyboard.isModifierPressed()) return; // We are selecting
+
+            await this.expand(sender);          
+        }
   }
 }
 </script>
