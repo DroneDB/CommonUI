@@ -68,6 +68,8 @@ export default {
 
         getChildren: async function(path) {
 
+            this.$log.info("getChildren(path)", path);
+
             try {
                 const entries = await ddb.fetchEntries(path, {
                     withHash: false,
@@ -76,7 +78,7 @@ export default {
                     stopOnError: false
                 });
 
-                return entries.filter(entry => {
+                var res = entries.filter(entry => {
                         return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
                     })
                     .sort((a, b) => {
@@ -103,7 +105,11 @@ export default {
                             isExpandable: ddb.entry.isDirectory(entry)
                         }
                     });
+                this.$log.info("Entries", clone(res));
+                return res;
             } catch (e) {
+                this.$log.error("Exception", clone(e));
+
                 if (e.message == "Unauthorized"){
                     this.$emit('error', "You are not allowed to perform this action", "Load entries");
                 } else {
@@ -154,6 +160,8 @@ export default {
 
         handleSelectionChanged: async function (selectedNodes) {
 
+            this.$log.info("FileBrowser.handleSelectionChanged(selectedNodes)", selectedNodes);
+
             // Keep track of nodes for "Open Item Location"
             if (selectedNodes.length > 0) this.lastSelectedNode = selectedNodes[selectedNodes.length - 1];
             else this.lastSelectedNode = null;
@@ -178,6 +186,8 @@ export default {
             this.$emit('selectionChanged', selectedNodes.map(n => n.node));
         },
         handleOpen: function (component, sender) {
+
+            this.$log.info("FileBrowser.handleOpen(component, sender)", component, sender);
 
             const node = component.node;
 

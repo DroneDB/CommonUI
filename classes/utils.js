@@ -1,6 +1,12 @@
 export function clone(obj){
     if (typeof obj === 'undefined') return undefined;
-    return JSON.parse(JSON.stringify(obj));
+    try {
+        return JSON.parse(JSON.stringify(obj));
+    } catch(e) {
+        console.error(e);
+        debugger;
+        return undefined;
+    }
 }
 
 export function bytesToSize(bytes, decimals = 2){

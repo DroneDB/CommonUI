@@ -67,12 +67,12 @@ export default {
 
             if (els.length == 0) return;
 
-            this.children = sortNodes(this.children.filter(item => !deleted.includes(item.entry.path)));
-
+            this.children = this.children.filter(item => !deleted.includes(item.entry.path));
         });
 
         this.$root.$on('folderOpened', async (folder) => {
 
+            this.$log.info("TreeNode.folderOpened(folder)", clone(folder));
             // If we are the folder to open, let's do it!
             if (this.node.entry.path == folder.entry.path) 
                 await this.handleOpenDblClick(new CustomEvent('click'));                
@@ -84,13 +84,24 @@ export default {
             if (items.length == 0) 
                 return;
             
+            if (!ddb.entry.isDirectory(this.node.entry)) 
+                return;
+
+            this.$log.info("In TreeNode.addItems(items, this.node.entry)", clone(items), clone(this.node.entry));
+
             var parentPath = pathutils.getParentFolder(items[0].entry.path);
-
-            if (parentPath == null) 
-                if (!this.node.root) return;
-            else 
-                if (parentPath != this.node.entry.path) return;
-
+            this.$log.info("Parent path", parentPath);
+                        
+            if (parentPath == null) {
+                if (!this.node.root) {
+                    return;
+                }
+            } else {
+                if (parentPath != this.node.entry.path) {
+                    return;
+                }
+            }
+            
             // Let's remove first the duplicates
             this.children = this.children.filter(ch => items.filter(i => i.entry.path == ch.entry.path).length == 0);
             
@@ -98,7 +109,14 @@ export default {
             for(var item of items)
                 this.children.push(item);
 
-            this.sortChildren();            
+            this.empty = false;
+            this.node.isExpandable = true;
+
+            if (!this.expanded) this.expand();
+            
+            this.sortChildren();    
+
+            this.$log.info("Added");
 
         });
        
@@ -142,6 +160,8 @@ export default {
 
         loadChildren: async function() {
 
+            this.$log.info("TreeNode.loadChildren")
+
             if (this.node.isExpandable && !this.loadedChildren){
                 this.loading = true;
                 
@@ -149,11 +169,16 @@ export default {
                 this.loadedChildren = true;
 
                 this.loading = false;
+                this.$log.info("Got", clone(this.children));
+            } else {
+                this.$log.info("Nothing to do");
             }
         },
 
         expand: async function(sender) {
             
+            this.$log.info("TreeNode.expand(sender)", sender);
+
             await this.loadChildren();
 
             // Empty?
@@ -172,6 +197,8 @@ export default {
 
             e.stopPropagation();
             if (Keyboard.isModifierPressed()) return; // We are selecting
+
+            this.$log.info("TreeNode._handleOpen(e, sender)", e, sender);
 
             await this.expand(sender);          
         }
