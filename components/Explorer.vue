@@ -1,5 +1,5 @@
 <template>
-<div id="explorer-container">
+<div id="explorer-container" >
     <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
                 :file="f" 
@@ -17,6 +17,7 @@
 import Thumbnail from './Thumbnail.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
+import { clone } from 'commonui/classes/utils';
 
 import { entry } from 'ddb';
 import shell from 'commonui/dynamic/shell';
@@ -92,8 +93,9 @@ export default {
     },
     methods: {
         onClick: function (e) {
+            
             // Clicked an empty area
-            if (e.target === this.$el) {
+            if (e.target.id === 'explorer') {
                 this.deselectAll();
             }
         },
