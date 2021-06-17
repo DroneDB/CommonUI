@@ -59,7 +59,6 @@ export default {
 
         await this.refreshNodes();
 
-
     },
     beforeDestroy: function () {
         unregisterContextMenu(this.$el);
@@ -143,8 +142,7 @@ export default {
                         selected: false,
                         expanded: !!n.expanded,
                         root: true,
-                        entry,
-                        isExpandable: true
+                        entry
                     });
                 } catch(e) {
                     if (e.message == "Unauthorized"){
@@ -163,8 +161,23 @@ export default {
             this.$log.info("FileBrowser.handleSelectionChanged(selectedNodes)", selectedNodes);
 
             // Keep track of nodes for "Open Item Location"
-            if (selectedNodes.length > 0) this.lastSelectedNode = selectedNodes[selectedNodes.length - 1];
-            else this.lastSelectedNode = null;
+            this.lastSelectedNode = selectedNodes.length > 0 ? selectedNodes[selectedNodes.length - 1] : null;
+            /*é
+            if (selectedNodes.length === 1) {
+                const n = selectedNodes[0];
+                if (n.expanded) {
+                    selectedNodes = n.$children;
+                } else if (n.isExpandable) {
+
+                    // If not loaded yet
+                    if (!n.loadedChildren)
+                        await n.expand();
+
+                    this.$emit('selectionChanged', n.children, n.node.entry.path);
+                }
+            } else {
+                this.$emit('selectionChanged', selectedNodes.map(n => n.node));
+            }*/
 
             // If a folder is expanded and we select it, 
             // we select it's children instead.
@@ -174,14 +187,19 @@ export default {
                     if (n.$children && n.$children.length > 0)
                         selectedNodes = n.$children;
                 } else if (n.node.isExpandable) {
-                    // Let's expand it
-                    await n.loadChildren();                    
+
+                    if (!n.loadedChildren) {
+                        // Let's expand it
+                        await n.loadChildren();                     
+                    }
+
                     this.$emit('selectionChanged', n.children, n.node.entry.path);
 
                     return;
 
                 }
             }
+            
 
             this.$emit('selectionChanged', selectedNodes.map(n => n.node));
         },
@@ -196,7 +214,7 @@ export default {
                 shell.openItem(node.path);
             } else {
                 // Select children of item
-                if (component.children && sender === "dblclick") {
+                if (component.children && (sender === "dblclick" || sender === "explorer")) {
                     
                     // This could lead to problems if we nest multiple DRONEDBs
                     this.$emit('selectionChanged', component.children, node.entry.type == ddb.entry.type.DRONEDB ? null : node.entry.path);

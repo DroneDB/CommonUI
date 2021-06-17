@@ -8,13 +8,13 @@
             <i class="icon circle notch spin" v-if="loading" />
             <i class="icon" @click="handleOpenCaret"
                             :class="expanded ? 'caret down' : 'caret right'" 
-                            v-if="node.isExpandable && !loading && !empty" />
-            <i class="icon nonexistant" v-if="!node.isExpandable || empty" />
+                            v-if="isExpandable && !loading && (!empty || !loadedChildren)" />
+            <i class="icon nonexistant" v-if="!isExpandable || (empty && loadedChildren)" />
 
             <i class="icon" :class="node.icon" />
             <div class="text">{{ node.label }}</div>
         </div>
-        <div class="children" v-if="expanded">
+        <div class="children" v-show="expanded">
             <TreeNode v-for="(node, index) in children" 
                     :node="node"
                     :key="node.path" 
@@ -51,11 +51,19 @@ export default {
           children: [],
           loading: false,
           loadedChildren: false,
-          empty: false,
           selected: false,
           expanded: false,
       }
   },
+    computed: {
+        isExpandable: function() {
+            return ddb.entry.isDirectory(this.node.entry);
+        },
+        empty: function() {
+            return this.children.length === 0;
+        }
+
+    },
     mounted: async function(){
         if (this.node.expanded){
             await this.handleOpenDblClick(new CustomEvent('click'));
@@ -65,17 +73,26 @@ export default {
             
             var els = this.children.filter(item => deleted.includes(item.entry.path));
 
-            if (els.length == 0) return;
+            // It's not our business
+            if (els.length == 0) 
+                return;
 
             this.children = this.children.filter(item => !deleted.includes(item.entry.path));
+
         });
 
-        this.$root.$on('folderOpened', async (folder) => {
+        this.$root.$on('folderOpened', async (tree) => {
 
-            this.$log.info("TreeNode.folderOpened(folder)", clone(folder));
-            // If we are the folder to open, let's do it!
-            if (this.node.entry.path == folder.entry.path) 
-                await this.handleOpenDblClick(new CustomEvent('click'));                
+            var ourPath = this.node.entry.path;
+
+            if (tree.length === 0)
+                return;
+
+            if (tree.includes(ourPath))
+                await this.expand();
+
+            if (tree[tree.length-1] == ourPath)
+                this.$emit('opened', this, "explorer");  
             
         });
 
@@ -84,10 +101,10 @@ export default {
             if (items.length == 0) 
                 return;
             
-            if (!ddb.entry.isDirectory(this.node.entry)) 
+            if (!this.isExpandable) 
                 return;
-
-            this.$log.info("In TreeNode.addItems(items, this.node.entry)", clone(items), clone(this.node.entry));
+            
+            this.$log.info("TreeNode.addItems(items, this.node.entry)", clone(items), clone(this.node.entry));
 
             var parentPath = pathutils.getParentFolder(items[0].entry.path);
             this.$log.info("Parent path", parentPath);
@@ -109,10 +126,10 @@ export default {
             for(var item of items)
                 this.children.push(item);
 
-            this.empty = false;
-            this.node.isExpandable = true;
-
-            if (!this.expanded) this.expand();
+            if (!this.expanded) {
+                this.expand();
+                this.$emit('opened', this, "addItems");
+            }
             
             this.sortChildren();    
 
@@ -162,35 +179,28 @@ export default {
 
             this.$log.info("TreeNode.loadChildren")
 
-            if (this.node.isExpandable && !this.loadedChildren){
-                this.loading = true;
-                
-                this.children = await this.getChildren(this.node.path);
-                this.loadedChildren = true;
+            this.loading = true;
+            
+            this.children = await this.getChildren(this.node.path);
+            this.loadedChildren = true;
 
-                this.loading = false;
-                this.$log.info("Got", clone(this.children));
-            } else {
-                this.$log.info("Nothing to do");
-            }
+            this.loading = false;
         },
 
-        expand: async function(sender) {
+        expand: async function() {
             
-            this.$log.info("TreeNode.expand(sender)", sender);
+            this.$log.info("TreeNode.expand",);
 
-            await this.loadChildren();
-
-            // Empty?
-            if (this.loadedChildren && this.children.length === 0){
-                this.empty = true;
-                this.expanded = false;
-            }else if (this.node.isExpandable){
-                // Toggle
-                this.expanded = !this.expanded;
+            if (!this.isExpandable) {
+                this.$log.info("Only folders can be expanded");
+                return;
             }
 
-            this.$emit('opened', this, sender);
+            if (!this.loadedChildren) 
+                await this.loadChildren();                
+
+            this.expanded = true;
+
         },
 
         _handleOpen: async function(e, sender){
@@ -200,7 +210,19 @@ export default {
 
             this.$log.info("TreeNode._handleOpen(e, sender)", e, sender);
 
-            await this.expand(sender);          
+            if (sender == "caret") {
+                if (!this.expanded) {
+                    await this.expand();   
+                    this.$emit('opened', this, sender);
+                } else {
+                    this.expanded = false; 
+                }
+            } else {
+                await this.expand(sender);
+                this.$emit('opened', this, sender);
+            }
+
+
         }
   }
 }

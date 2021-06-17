@@ -19,6 +19,9 @@ import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { clone } from 'commonui/classes/utils';
 
+import ddb from 'ddb';
+const { pathutils } = ddb;
+
 import { entry } from 'ddb';
 import shell from 'commonui/dynamic/shell';
 import {
@@ -130,26 +133,10 @@ export default {
         },
         handleOpen: async function (thumb) {
             const file = thumb.file;
-
             this.$log.info("Explorer.handleOpen(thumb))", thumb);
 
             if (entry.isDirectory(file.entry)) {
-                // Expand directory
-                // TODO: can we/should we cache results?
-                //if (file.getChildren && !file.children) {
-                /*if (file.isExpandable)
-                    thumb.loading = true;
-                    this.loading = true;
-                    try {
-                        file.children = await file.getChildren();
-                    } catch (e) {
-                        console.warn(e);
-                    }
-                    thumb.loading = false;
-                    this.loading = false;
-                }
-                */
-                this.$root.$emit("folderOpened", file);
+                this.$root.$emit("folderOpened", pathutils.getTree(file.entry.path));
             } else {
                 shell.openItem(file.path);
             }
