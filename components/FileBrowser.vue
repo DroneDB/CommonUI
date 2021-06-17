@@ -162,23 +162,7 @@ export default {
 
             // Keep track of nodes for "Open Item Location"
             this.lastSelectedNode = selectedNodes.length > 0 ? selectedNodes[selectedNodes.length - 1] : null;
-            /*é
-            if (selectedNodes.length === 1) {
-                const n = selectedNodes[0];
-                if (n.expanded) {
-                    selectedNodes = n.$children;
-                } else if (n.isExpandable) {
-
-                    // If not loaded yet
-                    if (!n.loadedChildren)
-                        await n.expand();
-
-                    this.$emit('selectionChanged', n.children, n.node.entry.path);
-                }
-            } else {
-                this.$emit('selectionChanged', selectedNodes.map(n => n.node));
-            }*/
-
+            
             // If a folder is expanded and we select it, 
             // we select it's children instead.
             if (selectedNodes.length === 1) {
