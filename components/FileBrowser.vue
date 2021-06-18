@@ -167,25 +167,23 @@ export default {
             // we select it's children instead.
             if (selectedNodes.length === 1) {
                 const n = selectedNodes[0];
-                if (n.expanded) {
-                    if (n.$children && n.$children.length > 0)
-                        selectedNodes = n.$children;
-                } else if (n.node.isExpandable) {
 
+                if (n.node.isExpandable || n.expanded) {
+                    
                     if (!n.loadedChildren) {
                         // Let's expand it
-                        await n.loadChildren();                     
+                        await n.expand(); 
                     }
 
+                    n.children.forEach(c => c.selected = false);
+
                     this.$emit('selectionChanged', n.children, n.node.entry.path);
-
                     return;
-
                 }
             }
-            
-
+                        
             this.$emit('selectionChanged', selectedNodes.map(n => n.node));
+
         },
         handleOpen: function (component, sender) {
 
