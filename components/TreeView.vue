@@ -15,6 +15,7 @@ import TreeNode from './TreeNode.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import ddb from 'ddb';
+import { clone } from '../classes/utils';
 const { pathutils } = ddb;
 
 export default {
@@ -41,13 +42,17 @@ export default {
           if (!component) return;
           this.$emit("opened", component, sender);
       },
-      handleSelection: function(node, mouseBtn){
-          if (!node) return; // Top
-          if (node.node.unselectable) return; // Not selectable
-          if (mouseBtn === Mouse.RIGHT && this.selectedNodes.length > 1) return; // Prevent accidental deselection
+      handleSelection: async function(node, mouseBtn){
 
-          // Multiple selection
-          if (Keyboard.isCtrlPressed()){
+        if (!node) return; // Top
+
+        this.$log.info("handleSelection(node, mouseBtn)", clone(node.node), clone(mouseBtn));
+
+        if (node.node.unselectable) return; // Not selectable
+        if (mouseBtn === Mouse.RIGHT && this.selectedNodes.length > 1) return; // Prevent accidental deselection
+
+        // Multiple selection
+        if (Keyboard.isCtrlPressed()){
             const id = this.selectedNodes.indexOf(node);
             if (id !== -1){
                 node.selected = false;
@@ -56,22 +61,26 @@ export default {
                 node.selected = true;
                 this.selectedNodes.push(node);
             }
-          } else if (Keyboard.isShiftPressed() && this.selectedNodes.length > 0 && this.rangeStartNode){
+            } else if (Keyboard.isShiftPressed() && this.selectedNodes.length > 0 && this.rangeStartNode){
             // Range selection
             this.selectedNodes.forEach(n => n.selected = false);
             this.selectedNodes = [];
 
             this.selectRange(this.rangeStartNode, node, this.$refs.treeNodes);
-          } else {
-           // Single selection
+        } else {
+            // Single selection
             this.selectedNodes.forEach(n => n.selected = false);
+
             node.selected = true;
+            if (node.isExpandable)
+                await node.expand();
+
             this.selectedNodes = [node];
             this.rangeStartNode = node;
-          }
+        }
           
-          this.$emit("selectionChanged", this.selectedNodes, this.selectedNodes.length > 0 ? pathutils.getParentFolder(this.selectedNodes[0].node.entry.path) : null);
-      },
+        this.$emit("selectionChanged", this.selectedNodes, this.selectedNodes.length > 0 ? pathutils.getParentFolder(this.selectedNodes[0].node.entry.path) : null);
+    },
 
       selectRange: function(low, high, nodes){
         if (!nodes) return true;
