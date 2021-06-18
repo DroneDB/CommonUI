@@ -146,11 +146,15 @@ export default {
             // if (mouseBtn === Mouse.RIGHT && this.selectedFiles.length > 1) return; // Prevent accidental deselection
             const file = thumb.file;
 
+            this.$log.info("Explorer.handleSelection(thumb, mouseBtn", thumb, mouseBtn);
+
             if (Keyboard.isShiftPressed() && this.selectedFiles.length > 0 && this.rangeStartThumb) {
                 // Range selection
                 this.selectedFiles.forEach(f => f.selected = false);
                 this.selectRange(this.rangeStartThumb, thumb, this.$refs.thumbs);
             } else {
+
+                this.$log.info("File", clone(file));
                 // Single selection
                 if (mouseBtn === Mouse.RIGHT) {
                     if (!file.selected) this.selectedFiles.forEach(f => f.selected = false);

@@ -52,16 +52,16 @@ export default {
         if (mouseBtn === Mouse.RIGHT && this.selectedNodes.length > 1) return; // Prevent accidental deselection
 
         // Multiple selection
-        if (Keyboard.isCtrlPressed()){
+        if (Keyboard.isCtrlPressed()) {
             const id = this.selectedNodes.indexOf(node);
-            if (id !== -1){
+            if (id !== -1) {
                 node.selected = false;
                 this.selectedNodes.splice(id, 1);
-            }else{
+            } else {
                 node.selected = true;
                 this.selectedNodes.push(node);
-            }
-            } else if (Keyboard.isShiftPressed() && this.selectedNodes.length > 0 && this.rangeStartNode){
+            }            
+        } else if (Keyboard.isShiftPressed() && this.selectedNodes.length > 0 && this.rangeStartNode){
             // Range selection
             this.selectedNodes.forEach(n => n.selected = false);
             this.selectedNodes = [];
