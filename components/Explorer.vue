@@ -1,5 +1,6 @@
 <template>
-<div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
+<div id="explorer-container" >
+    <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
                 :file="f" 
                 :key="f.path" 
@@ -8,6 +9,7 @@
                 @clicked="handleSelection" 
                 @open="handleOpen"
                 :lazyLoad="true" />
+    </div>    
 </div>
 </template>
 
@@ -15,6 +17,10 @@
 import Thumbnail from './Thumbnail.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
+import { clone } from 'commonui/classes/utils';
+
+import ddb from 'ddb';
+const { pathutils } = ddb;
 
 import { entry } from 'ddb';
 import shell from 'commonui/dynamic/shell';
@@ -25,12 +31,12 @@ import {
 
 export default {
     components: {
-        Thumbnail
+        Thumbnail        
     },
     props: ['files'],
     data: function () {
         return {
-            loading: false
+            loading: false            
         };
     },
     computed: {
@@ -90,8 +96,9 @@ export default {
     },
     methods: {
         onClick: function (e) {
+            
             // Clicked an empty area
-            if (e.target === this.$el) {
+            if (e.target.id === 'explorer') {
                 this.deselectAll();
             }
         },
@@ -126,23 +133,10 @@ export default {
         },
         handleOpen: async function (thumb) {
             const file = thumb.file;
+            this.$log.info("Explorer.handleOpen(thumb))", thumb);
 
             if (entry.isDirectory(file.entry)) {
-                // Expand directory
-                // TODO: can we/should we cache results?
-                if (file.getChildren && !file.children) {
-                    thumb.loading = true;
-                    this.loading = true;
-                    try {
-                        file.children = await file.getChildren();
-                    } catch (e) {
-                        console.warn(e);
-                    }
-                    thumb.loading = false;
-                    this.loading = false;
-                }
-
-                this.$emit("folderOpened", file.children);
+                this.$root.$emit("folderOpened", pathutils.getTree(file.entry.path));
             } else {
                 shell.openItem(file.path);
             }
@@ -152,11 +146,15 @@ export default {
             // if (mouseBtn === Mouse.RIGHT && this.selectedFiles.length > 1) return; // Prevent accidental deselection
             const file = thumb.file;
 
+            this.$log.info("Explorer.handleSelection(thumb, mouseBtn", thumb, mouseBtn);
+
             if (Keyboard.isShiftPressed() && this.selectedFiles.length > 0 && this.rangeStartThumb) {
                 // Range selection
                 this.selectedFiles.forEach(f => f.selected = false);
                 this.selectRange(this.rangeStartThumb, thumb, this.$refs.thumbs);
             } else {
+
+                this.$log.info("File", clone(file));
                 // Single selection
                 if (mouseBtn === Mouse.RIGHT) {
                     if (!file.selected) this.selectedFiles.forEach(f => f.selected = false);
@@ -216,5 +214,12 @@ export default {
         opacity: 0.5;
         pointer-events: none;
     }
+}
+
+#explorer-container {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
 }
 </style>

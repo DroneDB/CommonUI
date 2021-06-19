@@ -33,6 +33,7 @@ import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { rootPath } from 'commonui/dynamic/pathutils';
+import { clone } from 'commonui/classes/utils';
 
 import {Circle as CircleStyle, Fill, Stroke, Style, Text, Icon} from 'ol/style';
 
@@ -88,6 +89,7 @@ export default {
   },
   mounted: function(){
     this._updateMap = null;
+    this.lastFilesLoaded = null;
 
     const genShotStyle = (fill, stroke, size) => {
         let text = null;
@@ -437,10 +439,27 @@ export default {
                 this._updateMap = null;
             }
 
+            this.$log.info("Map.handler(newVal, oldVal)", clone(newVal), clone(oldVal));
+
             this._updateMap = setTimeout(() => {
+
+                if (this.lastFilesLoaded == null) {
+                    this.reloadFileLayers();
+                    return;
+                }
 
                 // Do we need to redraw the features?
                 // Count has changed or first or last items are different
+                if (newVal.length !== this.lastFilesLoaded.length || 
+                    newVal[0] !== this.lastFilesLoaded[0] || 
+                    newVal[newVal.length - 1] !== this.lastFilesLoaded[this.lastFilesLoaded.length - 1]){
+                   this.reloadFileLayers();
+                }else{
+                    // Just update (selection change)
+                    this.fileLayer.changed();
+                    this.updateRastersOpacity();
+                }
+                /*
                 if (newVal.length !== oldVal.length || 
                     newVal[0] !== oldVal[0] || 
                     newVal[newVal.length - 1] !== oldVal[oldVal.length - 1]){
@@ -449,7 +468,7 @@ export default {
                     // Just update (selection change)
                     this.fileLayer.changed();
                     this.updateRastersOpacity();
-                }
+                }*/
             }, 5);
         }
       }
@@ -531,6 +550,8 @@ export default {
                 this.extentsFeatures.addFeature(extentFeat);
             }
         });
+
+        this.lastFilesLoaded = clone(this.files);
 
         if (features.length) this.fileFeatures.addFeatures(features);
 

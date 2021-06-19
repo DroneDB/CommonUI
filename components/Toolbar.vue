@@ -17,27 +17,30 @@
 export default {
   props: ["tools", "className"],
   data: function(){
-      const dataTools = [];
+      return { };
+  },
+  computed: {
+      dataTools: function() {
+          const dataTools = [];
 
-      // Make sure all keys are set for tools
-      (this.tools || []).forEach((t, idx) => {
-          dataTools.push({
-                  id: t.id || 'tool-' + idx,
-                  icon: t.icon,
-                  selected: t.selected || false,
-                  disabled: t.disabled || false,
-                  title: t.title || '',
-                  onClick: t.onClick || false,
-                  onSelect: t.onSelect || false,
-                  onDeselect: t.onDeselect || false,
-                  exclusiveGroup: t.exclusiveGroup,
-              });
-          
-      });
+        // Make sure all keys are set for tools
+        (this.tools || []).forEach((t, idx) => {
+            dataTools.push({
+                    id: t.id || 'tool-' + idx,
+                    icon: t.icon,
+                    selected: t.selected || false,
+                    disabled: t.disabled || false,
+                    title: t.title || '',
+                    onClick: t.onClick || false,
+                    onSelect: t.onSelect || false,
+                    onDeselect: t.onDeselect || false,
+                    exclusiveGroup: t.exclusiveGroup,
+                });
+            
+        });
 
-      return { 
-          dataTools
-      };
+        return dataTools;
+      }
   },
   mounted: function(){
   },
