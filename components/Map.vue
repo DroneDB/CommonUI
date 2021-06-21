@@ -4,7 +4,13 @@
         @mouseleave="setMouseInside(false)">
         <Toolbar :tools="tools" ref="toolbar" />
         <div ref="map-container" class="map-container" :class="{'cursor-pointer': selectSingle,
-                                         'cursor-crosshair': selectArea}"/>
+                                         'cursor-crosshair': selectArea}">
+            <select id="basemap-selector" v-model="selectedBasemap" @change="updateBasemap">
+                <option v-for="(v, k) in basemaps" :value="k">
+                    {{ v.label }}
+                </option>
+            </select>
+        </div>
     </div>
 </template>
 
@@ -12,7 +18,7 @@
 import 'ol/ol.css';
 import {Map, View} from 'ol';
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from 'ol/layer';
-import {OSM, Vector as VectorSource, Cluster} from 'ol/source';
+import {Vector as VectorSource, Cluster} from 'ol/source';
 import {defaults as defaultControls, Control} from 'ol/control';
 import Collection from 'ol/Collection';
 import {DragBox} from 'ol/interaction';
@@ -29,6 +35,7 @@ import { fromExtent } from 'ol/geom/Polygon';
 
 import ddb from 'ddb';
 import HybridXYZ from '../classes/olHybridXYZ';
+import XYZ from 'ol/source/XYZ';
 import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
@@ -85,6 +92,25 @@ export default {
 
         selectSingle: false,
         selectArea: false,
+
+        selectedBasemap: "satellite",
+        basemaps: {
+            'satellite': {
+                label: "Satellite",
+                url: "//mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
+                attributions: ["© Google Maps"]
+            },
+            'hybrid': {
+                label: "Hybrid",
+                url: "//mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}",
+                attributions: ["© Google Maps"]
+            },
+            'osm': {
+                label: "OpenStreetMap",
+                url: "//tile.openstreetmap.org/{z}/{x}/{y}.png",
+                attributions: ["&copy; OpenStreetMap"]
+            }
+        }
       };
   },
   mounted: function(){
@@ -272,12 +298,17 @@ export default {
         }
     });
 
+    this.basemapLayer = new TileLayer({
+        source: new XYZ({
+            url: this.basemaps[this.selectedBasemap].url,
+            attributions: this.basemaps[this.selectedBasemap].attributions
+        })
+    });
+
     this.map = new Map({
         target: this.$refs['map-container'],
         layers: [
-            new TileLayer({
-                source: new OSM()
-            }),
+            this.basemapLayer,
             this.rasterLayer,
             this.footprintRastersLayer,
             this.extentLayer,
@@ -627,6 +658,12 @@ export default {
               if (layer.file.selected) layer.setOpacity(0.8);
               else layer.setOpacity(1.0);
           });
+      },
+      updateBasemap: function(){
+          const basemap = this.basemaps[this.selectedBasemap];
+          const source = this.basemapLayer.getSource();
+          source.setUrl(basemap.url);
+          source.setAttributions(basemap.attributions);
       }
   }
 }
@@ -641,6 +678,7 @@ export default {
     flex-direction: column;
 }
 .map-container{
+    position: relative;
     width: 100%;
     height: 100%;
 
@@ -649,6 +687,12 @@ export default {
     }
     &.cursor-crosshair{
         cursor: crosshair;
+    }
+    #basemap-selector{
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        z-index: 1;
     }
 }
 </style>
