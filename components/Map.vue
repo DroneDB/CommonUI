@@ -98,12 +98,12 @@ export default {
             'satellite': {
                 label: "Satellite",
                 url: "//mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
-                attributions: ["© Google Maps"]
+                attributions: ["&copy; Google Maps"]
             },
             'hybrid': {
                 label: "Hybrid",
                 url: "//mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}",
-                attributions: ["© Google Maps"]
+                attributions: ["&copy; Google Maps"]
             },
             'osm': {
                 label: "OpenStreetMap",
