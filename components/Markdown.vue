@@ -61,21 +61,39 @@ export default {
     update: _.debounce(function(e) {
       this.res = this.md.render(e.target.value);
       this.content = e.target.value;
-    }, 300)
+    }, 300),
+
+    refresh: async function(){
+      this.loading = true;
+
+      const [dataset, path] = ddb.utils.datasetPathFromUri(this.uri);
+        try{
+          const res = await dataset.getFileContents(path);
+
+          this.content = res;
+          this.res = this.md.render(this.content);
+          
+        }catch(e){
+          this.error = `Cannot fetch ${this.uri}: ${e}`;
+        }
+        this.loading = false;
+      }
   },
 
   mounted: async function(){
-      const [dataset, path] = ddb.utils.datasetPathFromUri(this.uri);
-      try{
-        const res = await dataset.getFileContents(path);
+      
+      await this.refresh();
 
-        this.content = res;
-        this.res = this.md.render(this.content);
-        
-      }catch(e){
-        this.error = `Cannot fetch ${this.uri}: ${e}`;
-      }
-      this.loading = false;
+      this.$root.$on('refreshMarkdown', async (uri) => {
+
+        if (this.uri !== uri) return;
+        this.$log.info("refreshMarkdown(uri)", uri);
+
+        await this.refresh();
+          
+      });
+
+
   }
 }
 </script>
