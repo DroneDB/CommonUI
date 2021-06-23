@@ -107,9 +107,14 @@ export default {
         height: 100%; 
         overflow: scroll;
         padding: 12px;
-        img{
+        user-select: text !important;
+        * {
+          user-select: text !important;
+        }
+        img {
             max-width: 100%;
         }
+        
     }
 }
 
