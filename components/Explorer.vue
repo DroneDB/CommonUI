@@ -1,5 +1,6 @@
 <template>
 <div id="explorer-container" >
+    <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
     <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
                 :file="f" 
@@ -31,12 +32,12 @@ import {
 
 export default {
     components: {
-        Thumbnail        
+        Thumbnail
     },
-    props: ['files'],
+    props: ['files', 'currentPath'],
     data: function () {
         return {
-            loading: false            
+            loading: false
         };
     },
     computed: {
@@ -221,5 +222,12 @@ export default {
     height: 50%;
     display: flex;
     flex-direction: column;
+    .breadcrumbs{
+        padding: 4px;
+        word-break: break-all;
+        overflow: hidden;
+        border-bottom: 1px solid #030A03;
+        border-top: 1px solid #030A03;
+    }
 }
 </style>
