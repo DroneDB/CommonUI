@@ -1,5 +1,6 @@
 <template>
 <div id="explorer-container" >
+    <Toolbar :tools="tools" v-if="tools" />
     <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
     <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
@@ -16,6 +17,7 @@
 
 <script>
 import Thumbnail from './Thumbnail.vue';
+import Toolbar from 'commonui/components/Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { clone } from 'commonui/classes/utils';
@@ -32,9 +34,9 @@ import {
 
 export default {
     components: {
-        Thumbnail
+        Thumbnail, Toolbar
     },
-    props: ['files', 'currentPath'],
+    props: ['files', 'currentPath', 'tools'],
     data: function () {
         return {
             loading: false
