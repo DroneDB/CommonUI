@@ -2,7 +2,7 @@
     <div class="toolbar" :class="className" >
         <template v-for="tool in dataTools">
             <div class="button" 
-                    :class="{'selected': tool.selected, 'disabled': tool.disabled}" 
+                    :class="{selected: tool.selected, disabled: tool.disabled}" 
                     :title="tool.title"
                     @click="toggleTool(tool.id)">
                 <i :class="'icon ' + tool.icon"></i>
@@ -17,15 +17,21 @@
 export default {
   props: ["tools", "className"],
   data: function(){
-      return { };
+    return {
+        dataTools: []
+    }
   },
-  computed: {
-      dataTools: function() {
-          const dataTools = [];
-
+  beforeMount: function(){
+      this.refreshTools();
+  },
+  mounted: function(){
+  },
+  methods: {
+      refreshTools: function(){
         // Make sure all keys are set for tools
+        this.dataTools = [];
         (this.tools || []).forEach((t, idx) => {
-            dataTools.push({
+            this.dataTools.push({
                     id: t.id || 'tool-' + idx,
                     icon: t.icon,
                     selected: t.selected || false,
@@ -38,13 +44,8 @@ export default {
                 });
             
         });
+      },
 
-        return dataTools;
-      }
-  },
-  mounted: function(){
-  },
-  methods: {
       getTool: function(toolId){
           return this.dataTools.find(t => t.id === toolId);
       },
@@ -100,6 +101,14 @@ export default {
         
           if (tool.selected) this.deselectTool(toolId);
           else this.selectTool(toolId);
+      }
+  },
+
+  watch: {
+      tools: function(newVal, oldVal){
+          if (newVal.length !== oldVal.length){
+            this.refreshTools();
+          }
       }
   }
 }
