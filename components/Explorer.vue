@@ -2,7 +2,7 @@
 <div id="explorer-container" >
     <Toolbar :tools="tools" v-if="tools" />
     <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
-    <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
+    <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
                 :file="f" 
                 :key="f.path" 
@@ -194,7 +194,7 @@ export default {
         scrollTo: function(file){
             const thumb = this.$refs.thumbs.find(t => t.file === file);
             if (thumb){
-                this.$el.lastChild.scrollTo(0, thumb.$el.offsetTop - this.$el.offsetTop - 12);
+                this.$refs.explorer.scrollTo(0, thumb.$el.offsetTop - this.$el.offsetTop - 12);
             }
         }
     }
