@@ -194,7 +194,7 @@ export default {
         scrollTo: function(file){
             const thumb = this.$refs.thumbs.find(t => t.file === file);
             if (thumb){
-                this.$el.scrollTo(0, thumb.$el.offsetTop - this.$el.offsetTop - 12);
+                this.$el.lastChild.scrollTo(0, thumb.$el.offsetTop - this.$el.offsetTop - 12);
             }
         }
     }
