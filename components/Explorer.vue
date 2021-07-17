@@ -229,7 +229,7 @@ export default {
         word-break: break-all;
         overflow: hidden;
         border-bottom: 1px solid #030A03;
-        border-top: 1px solid #030A03;
+        border-top: 1px solid #bbbbbb;
     }
 }
 </style>
