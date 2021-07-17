@@ -440,8 +440,12 @@ export default {
 
     // Right click
     this.map.on('contextmenu', e => {
+        e.stopPropagation();
+
         // Single selection
         doSelectSingle(e);
+
+        return false;
     });
 
     Keyboard.onKeyDown(this.handleKeyDown);

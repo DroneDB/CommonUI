@@ -50,12 +50,34 @@ const api = {
 };
 
 window.addEventListener("keydown", e => {
-    api.updateState(e);
+    const state = {
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        shiftKey: e.shiftKey
+    };
+
+    if (e.key === "Control") state.ctrlKey = true;
+    if (e.key === "Meta") state.metaKey = true;
+    if (e.key === "Shift") state.shiftKey = true;
+    
+    api.updateState(state);
+
     keyDownListeners.forEach(l => l(e));
 });
 
 window.addEventListener("keyup",  e => {
-    api.updateState(e);
+    const state = {
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        shiftKey: e.shiftKey
+    };
+
+    if (e.key === "Control") state.ctrlKey = false;
+    if (e.key === "Meta") state.metaKey = false;
+    if (e.key === "Shift") state.shiftKey = false;
+
+    api.updateState(state);
+    
     keyUpListeners.forEach(l => l(e));
 });
 
