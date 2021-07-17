@@ -440,11 +440,11 @@ export default {
 
     // Right click
     this.map.on('contextmenu', e => {
-        e.stopPropagation();
-
         // Single selection
         doSelectSingle(e);
 
+        e.stopPropagation();
+        e.preventDefault();
         return false;
     });
 
