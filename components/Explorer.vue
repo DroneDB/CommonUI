@@ -98,6 +98,12 @@ export default {
         unregisterContextMenu(this.$el);
     },
     methods: {
+        onTabActivated: function(){
+            this.$nextTick(() => {
+                this.lazyLoadThumbs();
+            });
+        },
+
         onClick: function (e) {
             
             // Clicked an empty area

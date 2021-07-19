@@ -71,6 +71,7 @@ export default {
           this.editing = true;
           this.$nextTick(() => {
               this.$refs.editTextarea.focus();
+              this.$refs.editTextarea.scrollTo(0, 0);
           });
       },
 
@@ -115,13 +116,13 @@ export default {
         
         button.edit{
             float: right;
-            margin: 8px;
+            margin: 10px;
         }
 
         button.save{
             position: absolute;
-            top: 8px;
-            right: 5px;
+            top: 10px;
+            right: 17px;
         }
 
         textarea{

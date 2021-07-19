@@ -55,6 +55,13 @@ export default {
   methods: {
       setActiveTab: function(tab){
           this.activeTab = tab.key;
+
+          const tag = this.$slots[tab.key][0].tag;
+          const node = this.$children.find(c => c.$vnode.tag === tag);
+
+          if (node.onTabActivated !== undefined){
+              node.onTabActivated();
+          }
       },
 
       addTab: function(tab, activate = true, prepend = false){

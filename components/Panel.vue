@@ -57,6 +57,15 @@ export default {
       this.$el.removeEventListener('resized', this.sendResizedEvent);
   },
   methods: {
+      onTabActivated: function(){
+        // Propagate
+        for (let i = 0; i < this.$children.length; i++){
+            const $c = this.$children[i];
+            if ($c.onTabActivated !== undefined){
+                $c.onTabActivated();
+            }
+        }
+      },
       updateStyle: function(el, style){
         el.style.width = style.width;
         el.style.height = style.height;
