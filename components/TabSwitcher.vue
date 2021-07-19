@@ -61,8 +61,7 @@ export default {
           if (this.$slots[tab.key]) this.removeTab(tab.key);
 
           const node = this.$createElement(tab.component, {
-               props: tab.props,
-               on: typeof tab.on !== 'undefined' ? tab.on : []
+               props: tab.props
           });
 
           this.$slots[tab.key] = [node];

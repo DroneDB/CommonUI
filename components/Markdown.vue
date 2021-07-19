@@ -4,11 +4,16 @@
         <div v-if="loading" class="loading">
             <i class="icon circle notch spin" />
         </div>
-        <Toolbar :tools="tools" ref="toolbar" />
-        <Panel split="vertical" class="container main" amount="30%">
-            <textarea :value="content" @input="update"></textarea>
-            <div v-html="res" class="content" />
-        </Panel>
+        <div v-else class="md-container">
+            <div v-if="editing && editable" class="edit-container">
+                <textarea ref="editTextarea" v-model="rawContent"></textarea>
+                <button @click="save" class="ui basic button secondary icon save"><i class="icon save" /></button>
+            </div>
+            <template v-else>
+                <button v-if="editable" @click="edit" class="ui basic button secondary icon edit"><i class="icon edit" /></button>
+                <div v-html="content" class="content" />
+            </template>
+        </div>
     </div>
 </template>
 
@@ -16,20 +21,20 @@
 import Message from './Message';
 import ddb from 'ddb';
 import MarkdownIt from 'markdown-it';
-import _ from 'lodash';
-import Panel from 'commonui/components/Panel.vue';
-import Toolbar from './Toolbar.vue';
 
 export default {
   components: {
-      Message,
-      Panel,
-      Toolbar
+      Message
   },
   props: {
       uri: { // DDB uri
           type: String,
           required: true
+      },
+      editable: {
+          type: Boolean,
+          required: false,
+          default: true
       }
   },
   data: function(){
@@ -37,116 +42,103 @@ export default {
           loading: true,
           error: "",
           content: "",
-          md: new MarkdownIt(),
-          res: null,
-          tools: [
-            {
-                id: 'save',
-                title: "Save",
-                icon: "save",                
-                onClick: () => {
-                    this.$emit('onSave', this.content);
-                }
-            }            
-        ],
-      }
-  },
-
-  computed: {
-    compiledMarkdown() {
-      return marked(this.content, { sanitize: true });
-    }
-  },
-  methods: {
-    update: _.debounce(function(e) {
-      this.res = this.md.render(e.target.value);
-      this.content = e.target.value;
-    }, 300),
-
-    refresh: async function(){
-      this.loading = true;
-
-      const [dataset, path] = ddb.utils.datasetPathFromUri(this.uri);
-        try{
-          const res = await dataset.getFileContents(path);
-
-          this.content = res;
-          this.res = this.md.render(this.content);
-          
-        }catch(e){
-          this.error = `Cannot fetch ${this.uri}: ${e}`;
-        }
-        this.loading = false;
+          rawContent: "",
+          editing: false,
       }
   },
 
   mounted: async function(){
+      const [dataset, path] = ddb.utils.datasetPathFromUri(this.uri);
+      this.dataset = dataset;
+      this.path = path;
+
+      try{
+        this.rawContent = await dataset.getFileContents(path);
+        this.updateMarkdown();
+      }catch(e){
+        this.error = `Cannot fetch ${this.uri}: ${e}`;
+      }
+      this.loading = false;
+  },
+
+  methods: {
+      updateMarkdown: function(){
+        const md = new MarkdownIt();
+        this.content = md.render(this.rawContent);
+      },
+
+      edit: function(){
+          this.editing = true;
+          this.$nextTick(() => {
+              this.$refs.editTextarea.focus();
+          });
+      },
+
+      save: async function(){
+          this.loading = true;
+          try{
+            await this.dataset.writeObj(this.path, this.rawContent);
+            this.updateMarkdown();
+            this.editing = false;
+          }catch(e){
+              this.error = e.message;
+          }finally{
+              this.loading = false;
+          }
+      }
       
-      await this.refresh();
-
-      this.$root.$on('refreshMarkdown', async (uri) => {
-
-        if (this.uri !== uri) return;
-        this.$log.info("refreshMarkdown(uri)", uri);
-
-        await this.refresh();
-          
-      });
-
-
   }
 }
 </script>
 
 <style>
 .markdown{
+    .loading{
+        margin-top: 12px;
+        text-align: center;
+    }
+
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
     height: 100%;
-    position: relative;
-    .content{
-        border-left: 1px solid #030A03; 
-        height: 100%; 
-        overflow: scroll;
-        padding: 12px;
-        user-select: text !important;
-        * {
-          user-select: text !important;
-        }
-        img {
-            max-width: 100%;
+
+    .md-container{
+        height: 100%;
+
+        .edit-container{
+            position: relative;
+            height: 100%;
+            display: flex;
         }
         
+        button.edit{
+            float: right;
+            margin: 8px;
+        }
+
+        button.save{
+            position: absolute;
+            top: 8px;
+            right: 5px;
+        }
+
+        textarea{
+            padding: 12px;
+            width: 100%;
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            font-family: monospace;
+            outline: none;
+        }
     }
-}
-
-#editor {
-  margin: 0;
-  height: 100%;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  color: #333;
-}
-
-textarea,
-#editor div {
-  display: inline-block;
-  width: 49%;
-  height: 100%;
-  vertical-align: top;
-  box-sizing: border-box;
-  padding: 0 20px;
-}
-
-textarea {
-  border: none;
-  border-right: 1px solid #ccc;
-  resize: none;
-  outline: none;
-  background-color: white;/*#f6f6f6;*/
-  font-size: 14px;
-  font-family: "Monaco", courier, monospace;
-  padding: 20px;
-}
-
-code {
-  color: #f66;
+    .content{
+        padding: 12px;
+        img{
+            max-width: 100%;
+        }
+    }
 }
 </style>

@@ -25,11 +25,13 @@ export default {
       return {
           panel0Style: {
               width: this.split === "vertical" ? this.amount : "100%",
-              height: this.split === "horizontal" ? this.amount : "100%"
+              height: this.split === "horizontal" ? this.amount : "100%",
+              zIndex: 0
           },
           panel1Style: {
               width: this.split === "vertical" ? (100 - parseFloat(this.amount)) + "%" : "100%",
-              height: this.split === "horizontal" ? (100 - parseFloat(this.amount)) + "%" : "100%"
+              height: this.split === "horizontal" ? (100 - parseFloat(this.amount)) + "%" : "100%",
+              zIndex: 1
           },
           resizing: false,
           canResize: false,
@@ -58,6 +60,7 @@ export default {
       updateStyle: function(el, style){
         el.style.width = style.width;
         el.style.height = style.height;
+        el.style.zIndex = style.zIndex;
       },
       sendResizedEvent: function(){
           for (let i = 0; i < this.$el.children.length; i++){
@@ -106,10 +109,10 @@ export default {
                   height += ((deltaY / h) * 100.0);
               }
 
-              if (this.split === "vertical" && width > 5.0 && width < 95.0){
+              if (this.split === "vertical" && width < 100.0){
                 this.panel0Style.width = width + '%';
                 this.panel1Style.width = (100 - width) + '%';
-              }else if (this.split === "horizontal" && height > 5.0 && height < 95.0){
+              }else if (this.split === "horizontal" && height < 100.0){
                 this.panel0Style.height = height + '%';
                 this.panel1Style.height = (100 - height) + '%';
               }
