@@ -122,7 +122,7 @@ export default {
         button.save{
             position: absolute;
             top: 10px;
-            right: 17px;
+            right: 7px;
         }
 
         textarea{
