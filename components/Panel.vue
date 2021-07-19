@@ -69,9 +69,6 @@ export default {
           if (this.canResize){
             this.resizing = true;
 
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-
             this.startResize = {
               x: e.clientX,
               y: e.clientY,
@@ -95,8 +92,8 @@ export default {
           if (this.resizing){
               const deltaX = e.clientX - this.startResize.x,
                     deltaY = e.clientY - this.startResize.y;
-              const w = window.innerWidth;
-              const h = window.innerHeight;
+              const w = this.$el.children[0].clientWidth + this.$el.children[1].clientWidth;
+              const h = this.$el.children[0].clientHeight + this.$el.children[1].clientHeight;
 
               let width = parseFloat(this.startResize.panelWidth);
               let height = parseFloat(this.startResize.panelHeight);
