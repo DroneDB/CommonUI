@@ -25,11 +25,13 @@ export default {
       return {
           panel0Style: {
               width: this.split === "vertical" ? this.amount : "100%",
-              height: this.split === "horizontal" ? this.amount : "100%"
+              height: this.split === "horizontal" ? this.amount : "100%",
+              zIndex: 0
           },
           panel1Style: {
               width: this.split === "vertical" ? (100 - parseFloat(this.amount)) + "%" : "100%",
-              height: this.split === "horizontal" ? (100 - parseFloat(this.amount)) + "%" : "100%"
+              height: this.split === "horizontal" ? (100 - parseFloat(this.amount)) + "%" : "100%",
+              zIndex: 1
           },
           resizing: false,
           canResize: false,
@@ -55,9 +57,19 @@ export default {
       this.$el.removeEventListener('resized', this.sendResizedEvent);
   },
   methods: {
+      onTabActivated: function(){
+        // Propagate
+        for (let i = 0; i < this.$children.length; i++){
+            const $c = this.$children[i];
+            if ($c.onTabActivated !== undefined){
+                $c.onTabActivated();
+            }
+        }
+      },
       updateStyle: function(el, style){
         el.style.width = style.width;
         el.style.height = style.height;
+        el.style.zIndex = style.zIndex;
       },
       sendResizedEvent: function(){
           for (let i = 0; i < this.$el.children.length; i++){
@@ -68,9 +80,6 @@ export default {
       mouseDown: function(e){
           if (this.canResize){
             this.resizing = true;
-
-            const w = window.innerWidth;
-            const h = window.innerHeight;
 
             this.startResize = {
               x: e.clientX,
@@ -95,8 +104,8 @@ export default {
           if (this.resizing){
               const deltaX = e.clientX - this.startResize.x,
                     deltaY = e.clientY - this.startResize.y;
-              const w = window.innerWidth;
-              const h = window.innerHeight;
+              const w = this.$el.children[0].clientWidth + this.$el.children[1].clientWidth;
+              const h = this.$el.children[0].clientHeight + this.$el.children[1].clientHeight;
 
               let width = parseFloat(this.startResize.panelWidth);
               let height = parseFloat(this.startResize.panelHeight);
@@ -109,10 +118,10 @@ export default {
                   height += ((deltaY / h) * 100.0);
               }
 
-              if (this.split === "vertical" && width > 5.0 && width < 95.0){
+              if (this.split === "vertical" && width < 100.0){
                 this.panel0Style.width = width + '%';
                 this.panel1Style.width = (100 - width) + '%';
-              }else if (this.split === "horizontal" && height > 5.0 && height < 95.0){
+              }else if (this.split === "horizontal" && height < 100.0){
                 this.panel0Style.height = height + '%';
                 this.panel1Style.height = (100 - height) + '%';
               }

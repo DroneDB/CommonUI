@@ -1,6 +1,8 @@
 <template>
 <div id="explorer-container" >
-    <div id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
+    <Toolbar :tools="tools" v-if="tools" />
+    <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
+    <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <Thumbnail v-for="(f, idx) in files" 
                 :file="f" 
                 :key="f.path" 
@@ -15,6 +17,7 @@
 
 <script>
 import Thumbnail from './Thumbnail.vue';
+import Toolbar from 'commonui/components/Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { clone } from 'commonui/classes/utils';
@@ -31,12 +34,12 @@ import {
 
 export default {
     components: {
-        Thumbnail        
+        Thumbnail, Toolbar
     },
-    props: ['files'],
+    props: ['files', 'currentPath', 'tools'],
     data: function () {
         return {
-            loading: false            
+            loading: false
         };
     },
     computed: {
@@ -95,6 +98,12 @@ export default {
         unregisterContextMenu(this.$el);
     },
     methods: {
+        onTabActivated: function(){
+            this.$nextTick(() => {
+                this.lazyLoadThumbs();
+            });
+        },
+
         onClick: function (e) {
             
             // Clicked an empty area
@@ -191,7 +200,7 @@ export default {
         scrollTo: function(file){
             const thumb = this.$refs.thumbs.find(t => t.file === file);
             if (thumb){
-                this.$el.scrollTo(0, thumb.$el.offsetTop - this.$el.offsetTop - 12);
+                this.$refs.explorer.scrollTo(0, thumb.$el.offsetTop - this.$el.offsetTop - 12);
             }
         }
     }
@@ -221,5 +230,12 @@ export default {
     height: 50%;
     display: flex;
     flex-direction: column;
+    .breadcrumbs{
+        padding: 4px;
+        word-break: break-all;
+        overflow: hidden;
+        border-bottom: 1px solid #030A03;
+        border-top: 1px solid #bbbbbb;
+    }
 }
 </style>

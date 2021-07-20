@@ -55,14 +55,20 @@ export default {
   methods: {
       setActiveTab: function(tab){
           this.activeTab = tab.key;
+
+          const tag = this.$slots[tab.key][0].tag;
+          const node = this.$children.find(c => c.$vnode.tag === tag);
+
+          if (node.onTabActivated !== undefined){
+              node.onTabActivated();
+          }
       },
 
       addTab: function(tab, activate = true, prepend = false){
           if (this.$slots[tab.key]) this.removeTab(tab.key);
 
           const node = this.$createElement(tab.component, {
-               props: tab.props,
-               on: typeof tab.on !== 'undefined' ? tab.on : []
+               props: tab.props
           });
 
           this.$slots[tab.key] = [node];

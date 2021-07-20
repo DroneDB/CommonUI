@@ -442,6 +442,10 @@ export default {
     this.map.on('contextmenu', e => {
         // Single selection
         doSelectSingle(e);
+
+        e.stopPropagation();
+        e.preventDefault();
+        return false;
     });
 
     Keyboard.onKeyDown(this.handleKeyDown);
