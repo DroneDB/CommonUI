@@ -59,7 +59,7 @@ export default {
           const tag = this.$slots[tab.key][0].tag;
           const node = this.$children.find(c => c.$vnode.tag === tag);
 
-          if (node.onTabActivated !== undefined){
+          if (node && node.onTabActivated !== undefined){
               node.onTabActivated();
           }
       },
@@ -74,7 +74,10 @@ export default {
           }
       },
 
-      addTab: function(tab, activate = true, prepend = false){
+      addTab: function(tab, opts = {}){
+          const activate = opts.activate !== undefined ? !!opts.activate : true;
+          const tabIndex = opts.tabIndex !== undefined ? parseInt(opts.tabIndex) : NaN;
+          
           if (this.$slots[tab.key]) this.removeTab(tab.key);
 
           const node = this.$createElement(tab.component, {
@@ -90,8 +93,8 @@ export default {
                 hideLabel: tab.hideLabel
           };
 
-          if (prepend){
-              this.dynTabs.unshift(tabDef);
+          if (!isNaN(tabIndex)){
+              this.dynTabs.splice(tabIndex, 0, tabDef);
           }else{
               this.dynTabs.push(tabDef);
           }
