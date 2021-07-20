@@ -4,6 +4,7 @@
                 :defaultTab="activeTab"
                 :position="position"
                 :buttonWidth="buttonWidth"
+                ref="topTabButtons"
                 v-if="position === 'top' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab" />
     <div class="tabs">
         <div class="tab" v-for="t in dynTabs" :class="{hide: t.key !== activeTab}">
@@ -14,6 +15,7 @@
                 :defaultTab="activeTab"
                 :position="position"
                 :buttonWidth="buttonWidth"
+                ref="bottomTabButtons"
                 v-if="position === 'bottom' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab"/>
 </div>
 </template>
@@ -52,9 +54,16 @@ export default {
   },
   mounted: function(){
   },
+  computed: {
+      tabButtons: function(){
+        if (this.$refs.bottomTabButtons) return this.$refs.bottomTabButtons;
+        else return this.$refs.topTabButtons;
+      }
+  },
   methods: {
       setActiveTab: function(tab){
           this.activeTab = tab.key;
+          this.tabButtons.setActiveTab(tab, false);
 
           const tag = this.$slots[tab.key][0].tag;
           const node = this.$children.find(c => c.$vnode.tag === tag);

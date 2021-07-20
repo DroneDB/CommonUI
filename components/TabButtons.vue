@@ -44,9 +44,9 @@ export default {
   mounted: function(){
   },
   methods: {
-      setActiveTab: function(tab){
+      setActiveTab: function(tab, event = true){
           this.activeTab = tab.key;
-          this.$emit("click", tab);
+          if (event) this.$emit("click", tab);
       }
   }
 }
