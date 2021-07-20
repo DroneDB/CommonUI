@@ -64,6 +64,7 @@ export default {
         &.top{
             border-top: none;
             border-bottom: 1px solid #000;
+            background: #fefefe;
         }
     }
     .fill{

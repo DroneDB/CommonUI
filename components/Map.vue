@@ -115,7 +115,6 @@ export default {
   },
   mounted: function(){
     this._updateMap = null;
-    this.lastFilesLoaded = null;
 
     const genShotStyle = (fill, stroke, size) => {
         let text = null;
@@ -448,17 +447,16 @@ export default {
         return false;
     });
 
+    this.$root.$on('addItems', () => {
+        this.reloadFileLayers();
+    });
+
     Keyboard.onKeyDown(this.handleKeyDown);
     Keyboard.onKeyUp(this.handleKeyUp);
 
     // Redraw, otherwise openlayers does not draw
     // the map correctly
     setTimeout(() => this.map.updateSize(), 1);
-
-    // Redraw when map is resized (via panels)
-    this.$el.addEventListener('resized', () => {
-        this.map.updateSize();
-    });
   },
   beforeDestroy: function(){
     Keyboard.offKeyDown(this.handleKeyDown);
@@ -474,27 +472,9 @@ export default {
                 this._updateMap = null;
             }
 
-            this.$log.info("Map.handler(newVal, oldVal)", clone(newVal), clone(oldVal));
-
             this._updateMap = setTimeout(() => {
-
-                if (this.lastFilesLoaded == null) {
-                    this.reloadFileLayers();
-                    return;
-                }
-
                 // Do we need to redraw the features?
                 // Count has changed or first or last items are different
-                if (newVal.length !== this.lastFilesLoaded.length || 
-                    newVal[0] !== this.lastFilesLoaded[0] || 
-                    newVal[newVal.length - 1] !== this.lastFilesLoaded[this.lastFilesLoaded.length - 1]){
-                   this.reloadFileLayers();
-                }else{
-                    // Just update (selection change)
-                    this.fileLayer.changed();
-                    this.updateRastersOpacity();
-                }
-                /*
                 if (newVal.length !== oldVal.length || 
                     newVal[0] !== oldVal[0] || 
                     newVal[newVal.length - 1] !== oldVal[oldVal.length - 1]){
@@ -503,12 +483,16 @@ export default {
                     // Just update (selection change)
                     this.fileLayer.changed();
                     this.updateRastersOpacity();
-                }*/
+                }
             }, 5);
         }
       }
   },
   methods: {
+      onPanelResized: function(){
+        // Redraw when map is resized (via panels)
+        this.map.updateSize();
+      },
       getSelectedFilesExtent: function(){
           const ext = createEmptyExtent();
           if (this.fileFeatures.getFeatures().length){
@@ -585,8 +569,6 @@ export default {
                 this.extentsFeatures.addFeature(extentFeat);
             }
         });
-
-        this.lastFilesLoaded = clone(this.files);
 
         if (features.length) this.fileFeatures.addFeatures(features);
 
@@ -675,7 +657,6 @@ export default {
 
 <style scoped>
 #map{
-    border-top: 1px solid #030A03;
     width: 100%;
     height: 100%;
     display: flex;

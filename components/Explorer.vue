@@ -104,6 +104,12 @@ export default {
             });
         },
 
+        onPanelResized: function(){
+            this.$nextTick(() => {
+                this.lazyLoadThumbs();
+            });
+        },
+
         onClick: function (e) {
             
             // Clicked an empty area
@@ -227,7 +233,7 @@ export default {
 
 #explorer-container {
     width: 100%;
-    height: 50%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     .breadcrumbs{

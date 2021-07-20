@@ -31,7 +31,9 @@ export default {
           panel1Style: {
               width: this.split === "vertical" ? (100 - parseFloat(this.amount)) + "%" : "100%",
               height: this.split === "horizontal" ? (100 - parseFloat(this.amount)) + "%" : "100%",
-              zIndex: 1
+              zIndex: 1,
+              borderTop: this.split === "horizontal" ? "1px solid #030A03" : undefined,
+              borderLeft: this.split === "vertical" ? "1px solid #030A03" : undefined,
           },
           resizing: false,
           canResize: false,
@@ -45,16 +47,11 @@ export default {
       // Update styles
       this.updateStyle(this.$el.children[0], this.panel0Style);
       this.updateStyle(this.$el.children[1], this.panel1Style);
-
-      // Propagate resized events
-      this.$el.addEventListener('resized', this.sendResizedEvent);
   },
   beforeDestroy: function(){
       Mouse.off("mouseup", this.mouseUp);
       Mouse.off("mousedown", this.mouseDown);
       Mouse.off("mousemove", this.mouseMove);
-
-      this.$el.removeEventListener('resized', this.sendResizedEvent);
   },
   methods: {
       onTabActivated: function(){
@@ -66,16 +63,20 @@ export default {
             }
         }
       },
+      onPanelResized: function(){
+        for (let i = 0; i < this.$children.length; i++){
+            const $c = this.$children[i];
+            if ($c.onPanelResized !== undefined){
+                $c.onPanelResized();
+            }
+        }
+      },
       updateStyle: function(el, style){
         el.style.width = style.width;
         el.style.height = style.height;
         el.style.zIndex = style.zIndex;
-      },
-      sendResizedEvent: function(){
-          for (let i = 0; i < this.$el.children.length; i++){
-            const el = this.$el.children[i];
-            el.dispatchEvent(new Event('resized'));
-          }
+        el.style.borderTop = style.borderTop;
+        el.style.borderLeft = style.borderLeft;
       },
       mouseDown: function(e){
           if (this.canResize){
@@ -92,7 +93,7 @@ export default {
 
       mouseUp: function(e){
           if (this.resizing){
-            this.sendResizedEvent();
+            this.onPanelResized();
           }
 
           this.resizing = false;

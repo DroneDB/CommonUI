@@ -64,6 +64,16 @@ export default {
           }
       },
 
+      onPanelResized: function(){
+          // Propagate to tabs
+          for (let i = 0; i < this.$children.length; i++){
+            const $c = this.$children[i];
+            if ($c.onPanelResized !== undefined){
+                $c.onPanelResized();
+            }
+          }
+      },
+
       addTab: function(tab, activate = true, prepend = false){
           if (this.$slots[tab.key]) this.removeTab(tab.key);
 
@@ -138,6 +148,7 @@ export default {
             flex-direction: column;
             height: 100%;
             overflow: auto;
+            background: #fefefe;
         }
     }
 
