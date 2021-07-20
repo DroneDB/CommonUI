@@ -493,6 +493,11 @@ export default {
         // Redraw when map is resized (via panels)
         this.map.updateSize();
       },
+      onTabActivated: function(){
+        this.$nextTick(() => {
+            this.map.updateSize();
+        });
+      },
       getSelectedFilesExtent: function(){
           const ext = createEmptyExtent();
           if (this.fileFeatures.getFeatures().length){
