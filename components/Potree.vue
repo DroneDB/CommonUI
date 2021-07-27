@@ -38,11 +38,6 @@ export default {
         // Redraw when map is resized (via panels)
         // this.map.updateSize();
       },
-      onTabActivated: function(){
-        this.$nextTick(() => {
-            // this.map.updateSize();
-        });
-      },
       loadPointClouds: async function(){
         if (!this.viewer) return;
 
@@ -89,15 +84,13 @@ export default {
         await this.loadPointClouds();
       },
       addPointCloud: async function(file){
-          return new Promise((resolve, reject) => {
-            const dataset = ddb.utils.datasetFromUri(file.path);
-            const eptUrl = dataset.buildUrl(file.entry, "ept/ept.json");
-
-            // TODO: what if not available?
+          return new Promise(async (resolve, reject) => {
+            const entry = ddb.utils.entryFromFile(file);
+            const eptUrl = await entry.getEpt();
 
             Potree.loadPointCloud(eptUrl, file.label, e => {
                 if (e.type == "loading_failed"){
-                    reject("Cannot load " + file);
+                    reject(`Cannot load ${file.label}, we're still building it. Try again in a few minutes.`);
                     return;
                 }
 
