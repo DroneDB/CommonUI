@@ -43,16 +43,12 @@ export default {
             // this.map.updateSize();
         });
       },
-      reloadPointClouds: async function(){
+      loadPointClouds: async function(){
         if (!this.viewer) return;
 
         if (!this.reloadingPointClouds){
             this.reloadingPointClouds = true;
             try{
-                console.log(this.viewer);
-                // this.viewer.reset();
-                // TODO: remove all point clouds
-
                 const pointCloudFiles = this.files.filter(f => f.entry.type === ddb.entry.type.POINTCLOUD);
                 await Promise.all(pointCloudFiles.map(this.addPointCloud));
                 this.viewer.fitToScreen();
@@ -63,21 +59,48 @@ export default {
             }
         }
       },
+      reloadViewer: async function(){
+        if (this.viewer){
+            this.viewer = null;
+            this.$refs.container.innerHTML = '';
+        }
+
+        let viewer = new Potree.Viewer(this.$refs.container);
+        viewer.setEDLEnabled(true);
+        viewer.setFOV(60);
+        viewer.setPointBudget(1*1000*1000);
+        viewer.setEDLEnabled(true);
+        viewer.loadGUI(() => {
+            viewer.setLanguage('en');
+            $("#menu_tools").next().show();
+            // viewer.toggleSidebar();
+        });
+
+        viewer.scene.scene.add( new THREE.AmbientLight( 0x404040, 2.0 ) ); // soft white light );
+        viewer.scene.scene.add( new THREE.DirectionalLight( 0xcccccc, 0.5 ) );
+
+        const directional = new THREE.DirectionalLight( 0xcccccc, 0.5 );
+        directional.position.z = 99999999999;
+        viewer.scene.scene.add( directional );
+
+        this.loaded = true;
+        this.viewer = viewer;
+
+        await this.loadPointClouds();
+      },
       addPointCloud: async function(file){
           return new Promise((resolve, reject) => {
-            const [dataset, path] = ddb.utils.datasetPathFromUri(file.path);
+            const dataset = ddb.utils.datasetFromUri(file.path);
+            const eptUrl = dataset.buildUrl(file.entry, "ept/ept.json");
 
-            // TODO: get EPT path for point cloud
-            // dataset.downloadUrl(path)
+            // TODO: what if not available?
 
-            Potree.loadPointCloud("/sample/ept.json", file.label, e => {
+            Potree.loadPointCloud(eptUrl, file.label, e => {
                 if (e.type == "loading_failed"){
                     reject("Cannot load " + file);
                     return;
                 }
 
-                console.log("LOADED!");
-            
                 this.viewer.scene.addPointCloud(e.pointcloud);
                 e.pointcloud.material.size = 1;
 
@@ -111,28 +134,8 @@ export default {
                 await loadResources("/potree/build/potree/potree.js");
                 await loadResources("/potree/libs/plasio/js/laslaz.js");
 
-                let viewer = new Potree.Viewer(this.$refs.container);
-                viewer.setEDLEnabled(true);
-                viewer.setFOV(60);
-                viewer.setPointBudget(1*1000*1000);
-                viewer.setEDLEnabled(true);
-                viewer.loadGUI(() => {
-                    viewer.setLanguage('en');
-                    $("#menu_tools").next().show();
-                    // viewer.toggleSidebar();
-                });
+                await this.reloadViewer();
 
-                viewer.scene.scene.add( new THREE.AmbientLight( 0x404040, 2.0 ) ); // soft white light );
-                viewer.scene.scene.add( new THREE.DirectionalLight( 0xcccccc, 0.5 ) );
-
-                const directional = new THREE.DirectionalLight( 0xcccccc, 0.5 );
-                directional.position.z = 99999999999;
-                viewer.scene.scene.add( directional );
-
-                this.loaded = true;
-                this.viewer = viewer;
-
-                this.reloadPointClouds();
               }catch(e){
                 this.error = e.message;
               }finally{
@@ -145,6 +148,8 @@ export default {
       files: {
         deep: true,
         handler: function(newVal, oldVal){
+            if (!window.Potree) return; // Potree not available
+
             // Prevent multiple updates
             if (this._updatePotree){
                 clearTimeout(this._updatePotree);
@@ -157,7 +162,7 @@ export default {
                 if (newVal.length !== oldVal.length || 
                     newVal[0] !== oldVal[0] || 
                     newVal[newVal.length - 1] !== oldVal[oldVal.length - 1]){
-                //    this.reloadPointClouds();
+                   this.reloadViewer();
                 }else{
                     // Just update (selection change)
                     // TODO
