@@ -115,7 +115,6 @@ export default {
   },
   mounted: function(){
     this._updateMap = null;
-    this.lastFilesLoaded = null;
 
     const genShotStyle = (fill, stroke, size) => {
         let text = null;
@@ -178,6 +177,13 @@ export default {
         },
 
         outline: new Style({
+            stroke: new Stroke({
+                color: 'rgba(253, 226, 147, 1)',
+                width: 6
+            })
+        }),
+
+        pointcloud: new Style({
             stroke: new Stroke({
                 color: 'rgba(253, 226, 147, 1)',
                 width: 6
@@ -261,6 +267,12 @@ export default {
         this.markerLayer
     ]));
 
+    this.pointCloudFeatures = new VectorSource();
+    this.pointCloudLayer = new VectorLayer({
+        source: this.pointCloudFeatures,
+        style: this.styles.pointcloud
+    });
+
     this.dragBox = new DragBox({minArea: 0});
     this.dragBox.on('boxend', () => {
         let extent = this.dragBox.getGeometry().getExtent();
@@ -310,6 +322,7 @@ export default {
         layers: [
             this.basemapLayer,
             this.rasterLayer,
+            this.pointCloudLayer,
             this.footprintRastersLayer,
             this.extentLayer,
             this.outlineLayer,
@@ -448,17 +461,16 @@ export default {
         return false;
     });
 
+    this.$root.$on('addItems', () => {
+        this.reloadFileLayers();
+    });
+
     Keyboard.onKeyDown(this.handleKeyDown);
     Keyboard.onKeyUp(this.handleKeyUp);
 
     // Redraw, otherwise openlayers does not draw
     // the map correctly
     setTimeout(() => this.map.updateSize(), 1);
-
-    // Redraw when map is resized (via panels)
-    this.$el.addEventListener('resized', () => {
-        this.map.updateSize();
-    });
   },
   beforeDestroy: function(){
     Keyboard.offKeyDown(this.handleKeyDown);
@@ -474,27 +486,9 @@ export default {
                 this._updateMap = null;
             }
 
-            this.$log.info("Map.handler(newVal, oldVal)", clone(newVal), clone(oldVal));
-
             this._updateMap = setTimeout(() => {
-
-                if (this.lastFilesLoaded == null) {
-                    this.reloadFileLayers();
-                    return;
-                }
-
                 // Do we need to redraw the features?
                 // Count has changed or first or last items are different
-                if (newVal.length !== this.lastFilesLoaded.length || 
-                    newVal[0] !== this.lastFilesLoaded[0] || 
-                    newVal[newVal.length - 1] !== this.lastFilesLoaded[this.lastFilesLoaded.length - 1]){
-                   this.reloadFileLayers();
-                }else{
-                    // Just update (selection change)
-                    this.fileLayer.changed();
-                    this.updateRastersOpacity();
-                }
-                /*
                 if (newVal.length !== oldVal.length || 
                     newVal[0] !== oldVal[0] || 
                     newVal[newVal.length - 1] !== oldVal[oldVal.length - 1]){
@@ -503,12 +497,21 @@ export default {
                     // Just update (selection change)
                     this.fileLayer.changed();
                     this.updateRastersOpacity();
-                }*/
+                }
             }, 5);
         }
       }
   },
   methods: {
+      onPanelResized: function(){
+        // Redraw when map is resized (via panels)
+        this.map.updateSize();
+      },
+      onTabActivated: function(){
+        this.$nextTick(() => {
+            this.map.updateSize();
+        });
+      },
       getSelectedFilesExtent: function(){
           const ext = createEmptyExtent();
           if (this.fileFeatures.getFeatures().length){
@@ -517,6 +520,9 @@ export default {
           this.rasterLayer.getLayers().forEach(layer => {
               extendExtent(ext, layer.getExtent());
           });
+          if (this.pointCloudFeatures.getFeatures().length){
+            extendExtent(ext, this.pointCloudFeatures.getExtent());
+          }
           return ext;
       },
       clearLayerGroup: function(layerGroup){
@@ -534,6 +540,7 @@ export default {
         this.outlineFeatures.clear();
         this.flightPathFeatures.clear();
         this.markerFeatures.clear();
+        this.pointCloudFeatures.clear();
         this.clearLayerGroup(this.rasterLayer);
 
         const features = [];
@@ -583,10 +590,14 @@ export default {
                 const extentFeat = new Feature(fromExtent(extent));
                 extentFeat.file = f;
                 this.extentsFeatures.addFeature(extentFeat);
+            }else if (f.entry.type === ddb.entry.type.POINTCLOUD){
+                const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
+                // TODO: add tile layer
+                const extentFeat = new Feature(fromExtent(extent));
+                extentFeat.file = f;
+                this.pointCloudFeatures.addFeature(extentFeat);
             }
         });
-
-        this.lastFilesLoaded = clone(this.files);
 
         if (features.length) this.fileFeatures.addFeatures(features);
 
@@ -675,7 +686,6 @@ export default {
 
 <style scoped>
 #map{
-    border-top: 1px solid #030A03;
     width: 100%;
     height: 100%;
     display: flex;

@@ -4,6 +4,7 @@
                 :defaultTab="activeTab"
                 :position="position"
                 :buttonWidth="buttonWidth"
+                ref="topTabButtons"
                 v-if="position === 'top' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab" />
     <div class="tabs">
         <div class="tab" v-for="t in dynTabs" :class="{hide: t.key !== activeTab}">
@@ -14,6 +15,7 @@
                 :defaultTab="activeTab"
                 :position="position"
                 :buttonWidth="buttonWidth"
+                ref="bottomTabButtons"
                 v-if="position === 'bottom' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab"/>
 </div>
 </template>
@@ -52,19 +54,39 @@ export default {
   },
   mounted: function(){
   },
+  computed: {
+      tabButtons: function(){
+        if (this.$refs.bottomTabButtons) return this.$refs.bottomTabButtons;
+        else return this.$refs.topTabButtons;
+      }
+  },
   methods: {
       setActiveTab: function(tab){
           this.activeTab = tab.key;
+          this.tabButtons.setActiveTab(tab, false);
 
           const tag = this.$slots[tab.key][0].tag;
           const node = this.$children.find(c => c.$vnode.tag === tag);
 
-          if (node.onTabActivated !== undefined){
+          if (node && node.onTabActivated !== undefined){
               node.onTabActivated();
           }
       },
 
-      addTab: function(tab, activate = true, prepend = false){
+      onPanelResized: function(){
+          // Propagate to tabs
+          for (let i = 0; i < this.$children.length; i++){
+            const $c = this.$children[i];
+            if ($c.onPanelResized !== undefined){
+                $c.onPanelResized();
+            }
+          }
+      },
+
+      addTab: function(tab, opts = {}){
+          const activate = opts.activate !== undefined ? !!opts.activate : true;
+          const tabIndex = opts.tabIndex !== undefined ? parseInt(opts.tabIndex) : NaN;
+          
           if (this.$slots[tab.key]) this.removeTab(tab.key);
 
           const node = this.$createElement(tab.component, {
@@ -80,8 +102,8 @@ export default {
                 hideLabel: tab.hideLabel
           };
 
-          if (prepend){
-              this.dynTabs.unshift(tabDef);
+          if (!isNaN(tabIndex)){
+              this.dynTabs.splice(tabIndex, 0, tabDef);
           }else{
               this.dynTabs.push(tabDef);
           }
@@ -138,6 +160,7 @@ export default {
             flex-direction: column;
             height: 100%;
             overflow: auto;
+            background: #fefefe;
         }
     }
 

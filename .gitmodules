@@ -1,0 +1,3 @@
+[submodule "public/potree"]
+	path = public/potree
+	url = https://github.com/DroneDB/PotreeBuild
