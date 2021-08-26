@@ -24,7 +24,7 @@
 import Mouse from '../mouse';
 
 // Global
-let ZIndex = 1;
+let ZIndex = 2;
 let TopMost = null;
 
 export default {
