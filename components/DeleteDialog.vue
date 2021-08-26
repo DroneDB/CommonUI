@@ -4,12 +4,8 @@
             maxWidth="70%"
             :fixedSize="true">
 
-        Are you sure to delete the following items?<br />
-        <div class="ui bulleted list">
-            <div class="item" v-for="file in files">
-                {{file.label}}
-            </div>
-        </div>        
+        Are you sure you want to delete <span v-if="files.length === 1">"{{ files[0].label }}"</span><span v-else>{{ files.length }} entries</span>?<br />
+
         <div class="buttons">
             <button @click="close('close')" class="ui button">
                 Close

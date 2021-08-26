@@ -7,7 +7,7 @@
         <input class="newFolderInput" 
                 ref="newFolderInput" 
                 v-on:keyup.enter="createFolder"
-                v-on:keyup.esc="close"                
+                v-on:keyup.esc="close"
                 v-model="newFolderPath" 
                 :error="!newFolderPath" />
         

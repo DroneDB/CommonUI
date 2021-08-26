@@ -178,16 +178,16 @@ export default {
                     n.children.forEach(c => c.selected = false);
 
                     this.$emit('selectionChanged', n.children);
-                    this.$emit('currentPathChanged', n.node.entry.path);
+                    this.$emit('currentUriChanged', n.node.path);
                     return;
                 }
             }
 
             this.$emit('selectionChanged', selectedNodes.map(n => n.node));
             if (selectedNodes.length > 0){
-                this.$emit('currentPathChanged', pathutils.getParentFolder(selectedNodes[0].node.entry.path));
+                this.$emit('currentUriChanged', pathutils.getParentFolder(selectedNodes[0].node.path));
             }else{
-                this.$emit('currentPathChanged', null);
+                this.$emit('currentUriChanged', null);
             }
 
         },
@@ -204,7 +204,7 @@ export default {
                 // Select children of item
                 if (component.children && (sender === "dblclick" || sender === "explorer")) {
                     this.$emit('selectionChanged', component.children);
-                    this.$emit('currentPathChanged', node.entry.path);
+                    this.$emit('currentUriChanged', node.path);
                 }
             }
         }
