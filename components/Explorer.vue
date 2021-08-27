@@ -37,18 +37,18 @@ export default {
     },
     props: ['files', 'currentPath', 'tools'],
     data: function () {
-        let contextMenu = [{
-            label: "Open Item Location",
-            click: () => {
-                if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
-            },
-            accelerator: "Alt+CmdOrCtrl+R",
-        },{
-            type: 'separator'
-        }];
+        let contextMenu = [];
 
         if (env.isElectron()){
             contextMenu = contextMenu.concat([{
+                        label: "Open Item Location",
+                        click: () => {
+                            if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
+                        },
+                        accelerator: "Alt+CmdOrCtrl+R",
+                    },{
+                        type: 'separator'
+                    },{
                         label: "Share",
                         accelerator: "CmdOrCtrl+S",
                         click: () => {
