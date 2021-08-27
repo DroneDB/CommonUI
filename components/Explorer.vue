@@ -1,5 +1,6 @@
 <template>
 <div id="explorer-container" >
+    <ContextMenu :items="contextMenu" />
     <Toolbar :tools="tools" v-if="tools" />
     <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
     <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
@@ -27,19 +28,56 @@ const { pathutils } = ddb;
 
 import { entry } from 'ddb';
 import shell from 'commonui/dynamic/shell';
-import {
-    registerContextMenu,
-    unregisterContextMenu
-} from 'commonui/dynamic/menu';
+import ContextMenu from 'commonui/components/ContextMenu';
 
 export default {
     components: {
-        Thumbnail, Toolbar
+        Thumbnail, Toolbar, ContextMenu
     },
     props: ['files', 'currentPath', 'tools'],
     data: function () {
         return {
-            loading: false
+            loading: false,
+            contextMenu: [{
+                    label: "Open Item Location",
+                    click: () => {
+                        if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
+                    },
+                    accelerator: "Alt+CmdOrCtrl+R",
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: "Share",
+                    accelerator: "CmdOrCtrl+S",
+                    click: () => {
+                        if (this.selectedFiles.length > 0) dispatchEvent(new Event("btnShare_Click"));
+                    }
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: "Select All/None",
+                    accelerator: "CmdOrCtrl+A",
+                    click: () => {
+                        if (!this.$refs.thumbs) return;
+                        if (this.selectedFiles.length === this.$refs.thumbs.length) {
+                            this.deselectAll();
+                        } else {
+                            this.selectAll();
+                        }
+                    }
+                },
+                {
+                    label: "Properties",
+                    accelerator: "CmdOrCtrl+P",
+                    click: () => {
+                        this.$emit("openProperties");
+                    }
+                }
+            ]
         };
     },
     computed: {
@@ -49,53 +87,9 @@ export default {
     },
     mounted: function () {
         this.rangeStartThumb = null;
-
-        registerContextMenu(this.$el, [{
-                label: "Open Item Location",
-                click: () => {
-                    if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
-                },
-                accelerator: "Alt+CmdOrCtrl+R",
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: "Share",
-                accelerator: "CmdOrCtrl+S",
-                click: () => {
-                    if (this.selectedFiles.length > 0) dispatchEvent(new Event("btnShare_Click"));
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: "Select All/None",
-                accelerator: "CmdOrCtrl+A",
-                click: () => {
-                    if (!this.$refs.thumbs) return;
-                    if (this.selectedFiles.length === this.$refs.thumbs.length) {
-                        this.deselectAll();
-                    } else {
-                        this.selectAll();
-                    }
-                }
-            },
-            {
-                label: "Properties",
-                accelerator: "CmdOrCtrl+P",
-                click: () => {
-                    this.$emit("openProperties");
-                }
-            }
-        ]);
     },
     updated: function(){
         this.lazyLoadThumbs();
-    },
-    beforeDestroy: function () {
-        unregisterContextMenu(this.$el);
     },
     methods: {
         onTabActivated: function(){
