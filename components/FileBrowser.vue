@@ -177,12 +177,18 @@ export default {
 
                     n.children.forEach(c => c.selected = false);
 
-                    this.$emit('selectionChanged', n.children, n.node.entry.path);
+                    this.$emit('selectionChanged', n.children);
+                    this.$emit('currentUriChanged', n.node.path);
                     return;
                 }
             }
-                        
+
             this.$emit('selectionChanged', selectedNodes.map(n => n.node));
+            if (selectedNodes.length > 0){
+                this.$emit('currentUriChanged', pathutils.getParentFolder(selectedNodes[0].node.path));
+            }else{
+                this.$emit('currentUriChanged', null);
+            }
 
         },
         handleOpen: function (component, sender) {
@@ -197,9 +203,8 @@ export default {
             } else {
                 // Select children of item
                 if (component.children && (sender === "dblclick" || sender === "explorer")) {
-                    
-                    // This could lead to problems if we nest multiple DRONEDBs
-                    this.$emit('selectionChanged', component.children, node.entry.type == ddb.entry.type.DRONEDB ? null : node.entry.path);
+                    this.$emit('selectionChanged', component.children);
+                    this.$emit('currentUriChanged', node.path);
                 }
             }
         }
