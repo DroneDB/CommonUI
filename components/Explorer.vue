@@ -28,6 +28,7 @@ const { pathutils } = ddb;
 
 import { entry } from 'ddb';
 import shell from 'commonui/dynamic/shell';
+import env from 'commonui/dynamic/env';
 import ContextMenu from 'commonui/components/ContextMenu';
 
 export default {
@@ -36,29 +37,29 @@ export default {
     },
     props: ['files', 'currentPath', 'tools'],
     data: function () {
-        return {
-            loading: false,
-            contextMenu: [{
-                    label: "Open Item Location",
-                    click: () => {
-                        if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
-                    },
-                    accelerator: "Alt+CmdOrCtrl+R",
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    label: "Share",
-                    accelerator: "CmdOrCtrl+S",
-                    click: () => {
-                        if (this.selectedFiles.length > 0) dispatchEvent(new Event("btnShare_Click"));
-                    }
-                },
-                {
-                    type: 'separator'
-                },
-                {
+        let contextMenu = [{
+            label: "Open Item Location",
+            click: () => {
+                if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
+            },
+            accelerator: "Alt+CmdOrCtrl+R",
+        },{
+            type: 'separator'
+        }];
+
+        if (env.isElectron()){
+            contextMenu = contextMenu.concat([{
+                        label: "Share",
+                        accelerator: "CmdOrCtrl+S",
+                        click: () => {
+                            if (this.selectedFiles.length > 0) dispatchEvent(new Event("btnShare_Click"));
+                        }
+                    },{
+                        type: 'separator'
+                    }]);
+        }
+
+        contextMenu = contextMenu.concat([{
                     label: "Select All/None",
                     accelerator: "CmdOrCtrl+A",
                     click: () => {
@@ -76,8 +77,11 @@ export default {
                     click: () => {
                         this.$emit("openProperties");
                     }
-                }
-            ]
+                }]);
+
+        return {
+            loading: false,
+            contextMenu
         };
     },
     computed: {
