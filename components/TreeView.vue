@@ -70,11 +70,7 @@ export default {
         } else {
             // Single selection
             this.selectedNodes.forEach(n => n.selected = false);
-
             node.selected = true;
-            if (node.isExpandable)
-                await node.expand();
-
             this.selectedNodes = [node];
             this.rangeStartNode = node;
         }

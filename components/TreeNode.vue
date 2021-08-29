@@ -127,11 +127,11 @@ export default {
                 this.children.push(item);
 
             if (!this.expanded) {
-                this.expand();
+                await this.expand();
                 this.$emit('opened', this, "addItems");
             }
             
-            this.sortChildren();    
+            this.sortChildren();
 
             this.$log.info("Added");
 
@@ -197,7 +197,7 @@ export default {
             }
 
             if (!this.loadedChildren) 
-                await this.loadChildren();                
+                await this.loadChildren();
 
             this.expanded = true;
 

@@ -13,5 +13,7 @@ export default {
             console.warn(`Cannot open ${uri}`);
         }
     },
-    showItemInFolder: (uri) => console.log
+    showItemInFolder: (uri) => {
+        console.log(uri);
+    }
 }

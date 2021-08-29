@@ -1,5 +1,6 @@
 <template>
 <div class="file-browser">
+    <ContextMenu :items="contextMenu" />
     <TreeView :nodes="nodes" @selectionChanged="handleSelectionChanged" @opened="handleOpen" :getChildren="getChildren" />
 
     <div v-if="loading" class="loading">
@@ -11,11 +12,9 @@
 <script>
 import TreeView from './TreeView.vue';
 import TreeNode from './TreeNode.vue';
-import {
-    registerContextMenu,
-    unregisterContextMenu
-} from 'commonui/dynamic/menu';
+import ContextMenu from 'commonui/components/ContextMenu';
 import shell from 'commonui/dynamic/shell';
+import env from 'commonui/dynamic/env';
 import ddb from 'ddb';
 import icons from '../classes/icons';
 import { clone } from '../classes/utils';
@@ -24,7 +23,7 @@ const { pathutils } = ddb;
 
 export default {
     components: {
-        TreeView
+        TreeView, ContextMenu
     },
     props: {
         rootNodes: {
@@ -33,35 +32,43 @@ export default {
         }
     },
     data: function () {
+        let contextMenu = [];
+
+        if (env.isElectron()){
+            contextMenu = contextMenu.concat([{
+                    label: "Open Item Location",
+                    click: () => {
+                        if (this.lastSelectedNode !== null) shell.showItemInFolder(this.lastSelectedNode.node.path);
+                    }
+                }, {
+                    type: 'separator'
+                }
+            ]);
+        }
+
+        contextMenu = contextMenu.concat([{
+                label: 'Properties',
+                click: () => {
+                    if (this.lastSelectedNode !== null) {
+                        this.$emit('selectionChanged', [this.lastSelectedNode.node]);
+                        this.$emit("openProperties");
+                    }
+                }
+            }
+        ]);
+
         return {
             nodes: [],
             loading: true,
             lastSelectedNode: null,
+            contextMenu
         };
     },
     mounted: async function () {
-        registerContextMenu(this.$el, [{
-            label: "Open Item Location",
-            click: () => {
-                if (this.lastSelectedNode !== null) shell.showItemInFolder(this.lastSelectedNode.node.path);
-            }
-        }, {
-            type: 'separator'
-        }, {
-            label: 'Properties',
-            click: () => {
-                if (this.lastSelectedNode !== null) {
-                    this.$emit('selectionChanged', [this.lastSelectedNode.node]);
-                    this.$emit("openProperties");
-                }
-            }
-        }]);
-
         await this.refreshNodes();
 
     },
     beforeDestroy: function () {
-        unregisterContextMenu(this.$el);
     },
     methods: {
 
@@ -168,7 +175,7 @@ export default {
             if (selectedNodes.length === 1) {
                 const n = selectedNodes[0];
 
-                if (n.node.isExpandable || n.expanded) {
+                if (n.isExpandable || n.expanded) {
                     
                     if (!n.loadedChildren) {
                         // Let's expand it
