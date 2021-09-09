@@ -17,3 +17,48 @@ export function bytesToSize(bytes, decimals = 2){
     var i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
+
+
+/* Is currently in full screen or not */
+export function IsFullScreenCurrently() {
+	var fse = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
+	
+	// If no element is in full-screen
+	if(fse === null)
+		return false;
+	else
+		return true;
+}
+
+// https://stackoverflow.com/a/7525760
+export function requestFullScreen(element) {
+
+    if (typeof element === 'undefined') {
+        element = document.body; // Make the body go full screen.
+    }
+
+    // Supports most browsers and their versions.
+    var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullScreen;
+
+    if (requestMethod) { // Native full screen.
+        requestMethod.call(element);
+    } else if (typeof window.ActiveXObject !== "undefined") { // Older IE.
+        var wscript = new ActiveXObject("WScript.Shell");
+        if (wscript !== null) {
+            wscript.SendKeys("{F11}");
+        }
+    }
+}
+
+// https://stackoverflow.com/a/7525760
+export function exitFullScreen() {
+
+    // Supports most browsers and their versions.
+    var exitMethod = document.exitFullscreen || document.webkitExitFullscreen || document.mozExitFullscreen || document.msExitFullscreen;
+
+    if (exitMethod) { // Native full screen.
+        exitMethod.call(document);
+    } else {
+        console.warn("Cannot find suitable exitFullscreen call");
+    }
+}

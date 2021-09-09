@@ -40,7 +40,7 @@ import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { rootPath } from 'commonui/dynamic/pathutils';
-import { clone } from 'commonui/classes/utils';
+import { requestFullScreen, exitFullScreen, IsFullScreenCurrently } from 'commonui/classes/utils';
 
 import {Circle as CircleStyle, Fill, Stroke, Style, Text, Icon} from 'ol/style';
 
@@ -87,7 +87,17 @@ export default {
                     this.clearSelection();
                 }
             },
-            
+            {
+                id: 'fullscreen',
+                title: "Fullscreen (F11)",
+                icon: "desktop",
+                onClick: () => {
+                    if (IsFullScreenCurrently()) 
+                        exitFullScreen();
+                     else
+                        requestFullScreen();                    
+                }
+            },            
         ],
 
         selectSingle: false,
