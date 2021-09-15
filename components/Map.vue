@@ -572,10 +572,10 @@ export default {
                 features.push(feat);
 
                 if (f.entry.type === ddb.entry.type.GEOIMAGE){
-                    if (f.entry.meta.captureTime){
+                    if (f.entry.properties.captureTime){
                         flightPath.push({
                             point,
-                            captureTime: f.entry.meta.captureTime
+                            captureTime: f.entry.properties.captureTime
                         });
                     }
                 }
