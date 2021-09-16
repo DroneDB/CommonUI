@@ -61,15 +61,29 @@ export default {
       }
   },
   methods: {
+      getTagFor(tabKey){
+          return this.$slots[tabKey][0].tag;
+      },
+
+      getNodeFor(tabKey){
+          const tag = this.getTagFor(tabKey);
+          return this.$children.find(c => c.$vnode.tag === tag);
+      },
+
       setActiveTab: function(tab){
-          this.activeTab = tab.key;
-          this.tabButtons.setActiveTab(tab, false);
+          if (this.activeTab !== tab.key){
+            const curNode = this.getNodeFor(this.activeTab);
+            if (curNode && curNode.onTabDeactivating !== undefined){
+                curNode.onTabDeactivating();
+            }
+            
+            this.activeTab = tab.key;
+            this.tabButtons.setActiveTab(tab, false);
 
-          const tag = this.$slots[tab.key][0].tag;
-          const node = this.$children.find(c => c.$vnode.tag === tag);
-
-          if (node && node.onTabActivated !== undefined){
-              node.onTabActivated();
+            const node = this.getNodeFor(tab.key);
+            if (node && node.onTabActivated !== undefined){
+                node.onTabActivated();
+            }
           }
       },
 

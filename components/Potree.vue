@@ -34,6 +34,11 @@ export default {
   },
   
   methods:{
+      onTabDeactivating: function(){
+          if (this.viewer){
+              // this.viewer.renderer.setAnimationLoop(); // Stop
+          }
+      },
       onPanelResized: function(){
         // Redraw when map is resized (via panels)
         // this.map.updateSize();

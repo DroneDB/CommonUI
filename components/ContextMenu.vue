@@ -15,7 +15,7 @@
 import Mouse from '../mouse';
 import Keyboard from '../keyboard';
 
-const contextMenus = [];
+let contextMenus = [];
 
 export default {
   components: {

@@ -366,7 +366,7 @@ export default {
                 for (let i = 0; i < feats.length; i++){
                     if (feats[i].file) feats[i].file.selected = !selected;
                 }
-                
+
                 // Inform other components we should scroll to this file
                 if (!selected && feats.length && feats[0].file){
                     this.$emit("scrollTo", feats[0].file);

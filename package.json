@@ -29,7 +29,7 @@
     "file-loader": "^4.0.0",
     "jsrsasign": "^8.0.23",
     "markdown-it": "^12.0.4",
-    "ol": "^6.1.1",
+    "ol": "^6.7.0",
     "promise-polyfill": "8.1.0",
     "sass": "^1.32.5",
     "sass-loader": "^7.0.3",
