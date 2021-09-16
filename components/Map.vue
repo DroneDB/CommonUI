@@ -95,7 +95,7 @@ export default {
                     if (IsFullScreenCurrently()) 
                         exitFullScreen();
                      else
-                        requestFullScreen();                    
+                        requestFullScreen(this.$el);
                 }
             },            
         ],
