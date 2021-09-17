@@ -114,7 +114,7 @@ export default {
                 // await loadResources("/potree/libs/openlayers3/ol.css");
                 // await loadResources("/potree/libs/openlayers3/ol.js");
 
-                await loadResources("/potree/build/potree/potree.css");
+                await loadResources("/potree/build/potree/potree.isolated.min.css");
                 await loadResources("/potree/libs/jquery-ui/jquery-ui.min.css");
                 await loadResources("/potree/libs/spectrum/spectrum.css");
                 await loadResources("/potree/libs/jstree/themes/mixed/style.css");
