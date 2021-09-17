@@ -66,10 +66,9 @@ export default {
         }
 
         let viewer = new Potree.Viewer(this.$refs.container);
-        viewer.setEDLEnabled(true);
+        viewer.setEDLEnabled(false);
         viewer.setFOV(60);
         viewer.setPointBudget(1*1000*1000);
-        viewer.setEDLEnabled(true);
         viewer.loadGUI(() => {
             viewer.setLanguage('en');
             $("#menu_tools").next().show();

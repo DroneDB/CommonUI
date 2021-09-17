@@ -92,10 +92,14 @@ export default {
                 title: "Fullscreen (F11)",
                 icon: "desktop",
                 onClick: () => {
-                    if (IsFullScreenCurrently()) 
+                    if (IsFullScreenCurrently()){
                         exitFullScreen();
-                     else
+                    } else{
                         requestFullScreen(this.$el);
+                        setTimeout(() => {
+                            this.map.updateSize();
+                        }, 500);
+                    }
                 }
             },            
         ],

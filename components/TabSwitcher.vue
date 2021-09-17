@@ -7,7 +7,7 @@
                 ref="topTabButtons"
                 v-if="position === 'top' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab" />
     <div class="tabs">
-        <div class="tab" v-for="t in dynTabs" :class="{hide: t.key !== activeTab}">
+        <div class="tab" v-for="t in dynTabs" :class="{hidden: t.key !== activeTab}">
             <slot :name="t.key" />
         </div>
     </div>
