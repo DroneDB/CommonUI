@@ -66,7 +66,7 @@ export default {
         }
 
         let viewer = new Potree.Viewer(this.$refs.container);
-        viewer.setEDLEnabled(false);
+        viewer.setEDLEnabled(true);
         viewer.setFOV(60);
         viewer.setPointBudget(1*1000*1000);
         viewer.loadGUI(() => {
@@ -173,11 +173,14 @@ export default {
 
 <style scoped>
 #potree{
+    background: #030A03;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     .loading{
+        color: #fefefe;
+        font-size: 120%;
         margin: 8px;
         text-align: center;
         .circle.notch {

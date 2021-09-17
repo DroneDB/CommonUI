@@ -1,11 +1,15 @@
 <template>
-<div>
+<div class="panel">
     <slot />
+    <a v-if="mobileCollapsed" class="ui button default icon expand mobile only large">
+        <i class="icon angle double right"></i>
+    </a>
 </div>
 </template>
 
 <script>
 import Mouse from '../mouse';
+import { isMobile, isTablet } from '../classes/responsive';
 
 export default {
   components: {
@@ -18,26 +22,43 @@ export default {
       amount: {
           type: String,
           default: "50%"
+      },
+      mobileAmount: {
+          type: String,
+          default: ""
+      },
+      tabletAmount: {
+          type: String,
+          default: ""
+      },
+      mobileCollapsed: {
+          type: Boolean,
+          default: false
       }
   },
   
   data: function(){
-      return {
+      const size = this.resAmount();
+
+      let data = {
           panel0Style: {
-              width: this.split === "vertical" ? this.amount : "100%",
-              height: this.split === "horizontal" ? this.amount : "100%",
+              width: this.split === "vertical" ? size : "100%",
+              height: this.split === "horizontal" ? size : "100%",
               zIndex: 0
           },
           panel1Style: {
-              width: this.split === "vertical" ? (100 - parseFloat(this.amount)) + "%" : "100%",
-              height: this.split === "horizontal" ? (100 - parseFloat(this.amount)) + "%" : "100%",
+              width: this.split === "vertical" ? (100 - parseFloat(size)) + "%" : "100%",
+              height: this.split === "horizontal" ? (100 - parseFloat(size)) + "%" : "100%",
               zIndex: 1,
               borderTop: this.split === "horizontal" ? "1px solid #030A03" : undefined,
               borderLeft: this.split === "vertical" ? "1px solid #030A03" : undefined,
           },
           resizing: false,
           canResize: false,
+          collapsed: this.mobileCollapsed
       };
+
+      return data;
   },
   mounted: function(){
       Mouse.on("mouseup", this.mouseUp);
@@ -54,6 +75,13 @@ export default {
       Mouse.off("mousemove", this.mouseMove);
   },
   methods: {
+      resAmount: function(){
+            if (isMobile() && this.mobileCollapsed) return 0;
+            else if (isMobile() && this.mobileAmount) return this.mobileAmount;
+            else if (isTablet() && this.tabletAmount) return this.tabletAmount;
+            else return this.amount;
+      }, 
+
       onTabActivated: function(){
         // Propagate
         for (let i = 0; i < this.$children.length; i++){
@@ -173,5 +201,19 @@ export default {
 </script>
 
 <style scoped>
-
+.panel{
+    position: relative;
+    .button.expand{
+        position: absolute;
+        top: 50%;
+        top: calc(50% - 18px);
+        left: -2px;
+        background-image: linear-gradient(#fefefe, #f3f3f3);
+        padding-left: 8px;
+        padding-right: 6px;
+        padding-top: 16px;
+        padding-bottom: 16px;
+        z-index: 2;
+    }
+}
 </style>

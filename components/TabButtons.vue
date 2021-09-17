@@ -1,7 +1,7 @@
 <template>
     <div class="buttons">
         <div v-for="t in tabs" class="tab-button" :class="{ active: activeTab === t.key, top: position === 'top' }" @click="setActiveTab(t)">
-            <i class="icon" :class="{padded: !!t.hideLabel, [t.icon]: true}" :title="t.label" /><span v-if="!t.hideLabel"> {{ t.label }}</span>
+            <i class="icon" :class="{padded: !!t.hideLabel, [t.icon]: true}" :title="t.label" /><span v-if="!t.hideLabel" class="mobile hide"> {{ t.label }}</span>
         </div>
         <div v-if="buttonWidth === 'auto'" class="fill" :class="{ top: position === 'top', shadowed: lastTabSelected }">
         </div>
@@ -118,6 +118,12 @@ export default {
 
         .icon.padded{
             padding-left: 3px;
+        }
+    }
+
+    @media only screen and (max-width: 767px) {
+        .tab-button{
+            padding-left: 12px;
         }
     }
 }
