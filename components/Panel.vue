@@ -1,7 +1,7 @@
 <template>
 <div class="panel">
     <slot />
-    <a v-if="mobileCollapsed" class="ui button default icon expand mobile only large">
+    <a @click="expandPanel" v-if="mobileCollapsed" class="ui button default icon expand mobile only large">
         <i class="icon angle double right"></i>
     </a>
 </div>
@@ -38,7 +38,7 @@ export default {
   },
   
   data: function(){
-      const size = this.resAmount();
+      const size = this.initialAmount();
 
       let data = {
           panel0Style: {
@@ -75,12 +75,27 @@ export default {
       Mouse.off("mousemove", this.mouseMove);
   },
   methods: {
-      resAmount: function(){
+      expandPanel: function(){
+          if (this.split == "horizontal") throw new Error("This is not supported yet! TODO");
+          this.collapsed = false;
+
+          const size = this.runningAmount();
+
+          this.panel0Style.width = size + '%';
+          this.panel1Style.width = (100 - size) + '%';
+          console.log("AH");
+      },
+
+      initialAmount: function(){
             if (isMobile() && this.mobileCollapsed) return 0;
-            else if (isMobile() && this.mobileAmount) return this.mobileAmount;
+            else return this.runningAmount();
+      }, 
+
+      runningAmount: function(){
+            if (isMobile() && this.mobileAmount) return this.mobileAmount;
             else if (isTablet() && this.tabletAmount) return this.tabletAmount;
             else return this.amount;
-      }, 
+      },
 
       onTabActivated: function(){
         // Propagate
@@ -214,6 +229,7 @@ export default {
         padding-top: 16px;
         padding-bottom: 16px;
         z-index: 2;
+        box-shadow: 0 0 4px #030A03;
     }
 }
 </style>

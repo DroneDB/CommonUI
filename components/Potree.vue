@@ -7,8 +7,8 @@
         </div>
 
         <div class="potree-container" :class="{loading}">
-            <div id="potree_render_area" ref="container"></div>
             <div id="potree_sidebar_container"> </div>
+            <div id="potree_render_area" ref="container"></div>
         </div>
     </div>
 </template>
@@ -66,6 +66,17 @@ export default {
         }
 
         let viewer = new Potree.Viewer(this.$refs.container);
+
+        viewer.toggleSidebar = () => {
+                let renderArea = this.$refs.container;
+                let isVisible = renderArea.style.right === '300px';
+
+                if (isVisible) {
+                    renderArea.style.right = '0px';
+                } else {
+                    renderArea.style.right = '300px';
+                }
+        };
         viewer.setEDLEnabled(true);
         viewer.setFOV(60);
         viewer.setPointBudget(1*1000*1000);
@@ -171,7 +182,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 #potree{
     background: #030A03;
     width: 100%;
@@ -188,6 +199,12 @@ export default {
             width: 22px;
         }
     }
+
+    #potree_quick_buttons{
+        left: auto !important;
+        right: 40px !important;
+    }
+
     .potree-container{
         &.loading{
             visibility: hidden;
@@ -205,6 +222,11 @@ export default {
         background: radial-gradient(ellipse at center, rgba(79,79,79,1) 0%,rgba(22,22,22,1) 100%);
     	position: relative;
     	padding: 0;
+
+        #potree_render_area{
+            -webkit-transition: right .35s;
+            transition: right .35s;
+        }
 
         #potree_render_area > canvas{
             width: 100% !important;
@@ -279,7 +301,9 @@ export default {
 
     #potree_sidebar_container{
         overflow-y: auto;
+        overflow-x: hidden;
         background-color: #19282c;
+        right: 0;
 
         a{
             color: #111;
