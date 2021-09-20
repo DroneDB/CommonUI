@@ -97,6 +97,10 @@ export default {
           }
       },
 
+      hasTab: function(key){
+          return !!this.$slots[key];
+      },
+
       addTab: function(tab, opts = {}){
           const activate = opts.activate !== undefined ? !!opts.activate : true;
           const tabIndex = opts.tabIndex !== undefined ? parseInt(opts.tabIndex) : NaN;

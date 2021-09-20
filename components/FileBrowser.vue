@@ -13,7 +13,6 @@
 import TreeView from './TreeView.vue';
 import TreeNode from './TreeNode.vue';
 import ContextMenu from 'commonui/components/ContextMenu';
-import shell from 'commonui/dynamic/shell';
 import env from 'commonui/dynamic/env';
 import ddb from 'ddb';
 import icons from '../classes/icons';
@@ -47,6 +46,11 @@ export default {
         }
 
         contextMenu = contextMenu.concat([{
+                label: 'Open Item',
+                click: () => {
+                    if (this.lastSelectedNode !== null) this.$emit('openItem', this.lastSelectedNode.node);
+                }
+            },{
                 label: 'Properties',
                 click: () => {
                     if (this.lastSelectedNode !== null) {
@@ -162,8 +166,6 @@ export default {
 
         handleSelectionChanged: async function (selectedNodes) {
 
-            this.$log.info("FileBrowser.handleSelectionChanged(selectedNodes)", selectedNodes);
-
             // Keep track of nodes for "Open Item Location"
             this.lastSelectedNode = selectedNodes.length > 0 ? selectedNodes[selectedNodes.length - 1] : null;
             
@@ -201,7 +203,7 @@ export default {
 
             // Open file in default program
             if (!ddb.entry.isDirectory(node.entry)) {
-                shell.openItem(node.path);
+                this.$emit("openItem", node);
             } else {
                 // Select children of item
                 if (component.children && (sender === "dblclick" || sender === "explorer")) {

@@ -127,15 +127,18 @@ export default {
       Mouse.off("mousedown", this.mouseDown);
       Mouse.off("mousemove", this.mouseMove);
 
-      if (this.observer) this.observer.disconnect();
+      if (this.observer){
+          this.observer.disconnect();
+          this.observer = null;
+      }
   },
   methods: {
       contentChanged: function(){
-          console.log("content changed");
           this.$nextTick(() => this.centerWindow());
       },
       centerWindow: function(){
-          console.log('center window');
+          if (!this.$refs.window) return;
+          
           const w = window.innerWidth;
           const h = window.innerHeight;
           const ww = this.$refs.window.clientWidth;
