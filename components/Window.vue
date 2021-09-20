@@ -1,19 +1,20 @@
 <template>
-<div class="window-container" :class="{modal}">
+<div class="window-container" :class="{modal}" @mouseup="handleContainerCloseClick">
     <div class="window"
         :style="winStyle"
         :id="id"
-        :class="{dragging, resizing}"
+        :class="{dragging, resizing, fixed: fixedPosition}"
         ref="window"
         @mousedown="handleZ"
+        @mouseup="handleWindowCloseClick"
         >
         <div class="title" ref="title">
             <div class="text">{{title}}</div> 
-            <div class="close" @mousedown="closeMouseDown">
+            <div class="close" @mouseup="closeMouseUp">
                 <i class="icon close"></i>
             </div>
         </div>
-        <div class="content">
+        <div class="content" ref="content">
             <slot/>
         </div>
     </div>
@@ -43,6 +44,14 @@ export default {
           type: String,
           default: "auto"
       },
+      width:{
+          type: String,
+          default: "30%"
+      },
+      height:{
+          type: String,
+          default: "40%"
+      },
       id:{
           type: String,
           required: true
@@ -50,15 +59,24 @@ export default {
       modal:{
           type: Boolean,
           default: false
-      }
+      },
+      fixedPosition:{
+          type: Boolean,
+          default: false
+      },
+      closeModalOnClick:{
+          type: Boolean,
+          default: false
+      },
   },
   data: function(){
-      const winStyle = JSON.parse(window.localStorage.getItem(`winStyle_${this.id}`) || "{}");
+      // TODO: re-add window position preferences
+      const winStyle = {}; //JSON.parse(window.localStorage.getItem(`winStyle_${this.id}`) || "{}");
 
       const w = window.innerWidth;
       const h = window.innerHeight;
-      if (!winStyle.width) winStyle.width = "30%";
-      if (!winStyle.height) winStyle.height = "40%";
+      if (!winStyle.width) winStyle.width = this.width;
+      if (!winStyle.height) winStyle.height = this.height;
       
       const ww = (parseFloat(winStyle.width) / 100.0) * w;
       const wh = (parseFloat(winStyle.height) / 100.0) * h;
@@ -91,6 +109,33 @@ export default {
 
       // Center if this is fixed (needs to be computed after mount)
       if (this.fixedSize && this.winStyle.visibility === "hidden"){
+          this.centerWindow();
+          this.winStyle.visibility = "";
+      }
+
+      if (this.fixedSize) {
+        // Watch for changes in window content
+        this.observer = new MutationObserver(this.contentChanged);
+        this.observer.observe(this.$refs.content, {
+            subtree: true,
+            childList: true
+        });
+      }
+  },
+  beforeDestroy: function(){
+      Mouse.off("mouseup", this.mouseUp);
+      Mouse.off("mousedown", this.mouseDown);
+      Mouse.off("mousemove", this.mouseMove);
+
+      if (this.observer) this.observer.disconnect();
+  },
+  methods: {
+      contentChanged: function(){
+          console.log("content changed");
+          this.$nextTick(() => this.centerWindow());
+      },
+      centerWindow: function(){
+          console.log('center window');
           const w = window.innerWidth;
           const h = window.innerHeight;
           const ww = this.$refs.window.clientWidth;
@@ -98,16 +143,18 @@ export default {
 
           this.winStyle.left = (50.0 - (ww / w * 100.0) / 2.0) + "%";
           this.winStyle.top = (50.0 - (wh / h * 100.0) / 2.0) + "%";
+      },
 
-          this.winStyle.visibility = "";
-      }
-  },
-  beforeDestroy: function(){
-      Mouse.off("mouseup", this.mouseUp);
-      Mouse.off("mousedown", this.mouseDown);
-      Mouse.off("mousemove", this.mouseMove);
-  },
-  methods: {
+      handleContainerCloseClick: function(e){
+          if (this.closeModalOnClick) this.closeMouseUp(e);
+      },
+      handleWindowCloseClick: function(e){
+          // Events stopped here will not propagate to 
+          // handleContainerCloseClick
+          if (!this.closeModalOnClick) return;
+          else e.stopPropagation();
+      },
+
       setOnTop: function(){
           if (this.winStyle.zIndex < ZIndex) this.winStyle.zIndex = ZIndex++;
       },
@@ -121,6 +168,7 @@ export default {
       },
       
       mouseDown: function(e){
+          if (this.fixedPosition) return;
           if (TopMost !== this) return;
 
           if (e.target.parentElement === this.$refs.title){
@@ -152,7 +200,8 @@ export default {
           this.resizing = false;
           this.winStyle.cursor = "";
 
-          window.localStorage.setItem(`winStyle_${this.id}`, JSON.stringify(this.winStyle)); 
+          // TODO: re-add window location preferences
+          //window.localStorage.setItem(`winStyle_${this.id}`, JSON.stringify(this.winStyle)); 
       },
 
       mouseMove: function(e){
@@ -197,10 +246,11 @@ export default {
                   this.winStyle.left = left;
               }
           }else if (Mouse.intersects(e, this.$refs.window) && !this.fixedSize){
-            const left = this.$refs.window.offsetLeft,
-                    right = left + this.$refs.window.clientWidth,
-                    top = this.$refs.window.offsetTop,
-                    bottom = top + this.$refs.window.clientHeight;
+            const box = this.$refs.window.getBoundingClientRect();
+            const left = box.x,
+                    right = left + box.width,
+                    top = box.y,
+                    bottom = top + box.height;
             const MARGIN = 12;
 
             const south = (bottom - e.clientY) < MARGIN && (bottom - e.clientY) > 0,
@@ -216,7 +266,7 @@ export default {
           }
       },
 
-      closeMouseDown: function(e){
+      closeMouseUp: function(e){
           e.stopPropagation();
 
           this.$emit("onClose");
@@ -263,6 +313,13 @@ export default {
         }
     }
 
+    &.fixed{
+        .title:hover{
+            cursor: default;
+            background-color: #ddd;
+        }
+    }
+
     &.dragging{
         .title{
             cursor: move;
@@ -274,7 +331,7 @@ export default {
         opacity: 0.5;
     }
 
-    .content{
+    &>.content{
         overflow: auto;
         flex-grow: 1;
         user-select: text;

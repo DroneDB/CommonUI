@@ -1,8 +1,8 @@
 <template>
     <Window title="Confirm delete" id="remove" @onClose="close('close')" 
-            :modal="true"
+            modal
             maxWidth="70%"
-            :fixedSize="true">
+            fixedSize>
 
         Are you sure you want to delete <span v-if="files.length === 1">"{{ files[0].label }}"</span><span v-else>{{ files.length }} entries</span>?<br />
 

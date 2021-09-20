@@ -1,8 +1,8 @@
 <template>
     <Window :title="title" id="alert" @onClose="dismiss('cancel')" 
-            :modal="true"
+            modal
             maxWidth="70%"
-            :fixedSize="true">
+            fixedSize>
         
         <slot/>
 

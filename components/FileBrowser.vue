@@ -74,8 +74,6 @@ export default {
 
         getChildren: async function(path) {
 
-            this.$log.info("getChildren(path)", path);
-
             try {
                 const entries = await ddb.fetchEntries(path, {
                     withHash: false,
@@ -111,7 +109,6 @@ export default {
                             isExpandable: ddb.entry.isDirectory(entry)
                         }
                     });
-                this.$log.info("Entries", clone(res));
                 return res;
             } catch (e) {
                 this.$log.error("Exception", clone(e));
@@ -199,8 +196,6 @@ export default {
 
         },
         handleOpen: function (component, sender) {
-
-            this.$log.info("FileBrowser.handleOpen(component, sender)", component, sender);
 
             const node = component.node;
 

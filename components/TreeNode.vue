@@ -177,8 +177,6 @@ export default {
 
         loadChildren: async function() {
 
-            this.$log.info("TreeNode.loadChildren")
-
             this.loading = true;
             
             this.children = await this.getChildren(this.node.path);
@@ -189,8 +187,6 @@ export default {
 
         expand: async function() {
             
-            this.$log.info("TreeNode.expand",);
-
             if (!this.isExpandable) {
                 this.$log.info("Only folders can be expanded");
                 return;
@@ -207,8 +203,6 @@ export default {
 
             e.stopPropagation();
             if (Keyboard.isModifierPressed()) return; // We are selecting
-
-            this.$log.info("TreeNode._handleOpen(e, sender)", e, sender);
 
             if (sender == "caret") {
                 if (!this.expanded) {
