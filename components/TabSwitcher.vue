@@ -67,6 +67,8 @@ export default {
   },
   methods: {
       getTagFor(tabKey){
+          if (!this.$slots[tabKey]) return null;
+
           return this.$slots[tabKey][0].tag;
       },
 
@@ -107,35 +109,37 @@ export default {
       },
 
       addTab: function(tab, opts = {}){
-          const activate = opts.activate !== undefined ? !!opts.activate : true;
-          const tabIndex = opts.tabIndex !== undefined ? parseInt(opts.tabIndex) : NaN;
-          
-          if (this.$slots[tab.key]) this.removeTab(tab.key);
+          this.$nextTick(() => {
+            const activate = opts.activate !== undefined ? !!opts.activate : true;
+            const tabIndex = opts.tabIndex !== undefined ? parseInt(opts.tabIndex) : NaN;
+            
+            if (this.$slots[tab.key]) this.removeTab(tab.key);
 
-          const node = this.$createElement(tab.component, {
-               props: tab.props
+            const node = this.$createElement(tab.component, {
+                props: tab.props
+            });
+
+            this.$slots[tab.key] = [node];
+            
+            const tabDef = {
+                    label: tab.label,
+                    icon: tab.icon,
+                    key: tab.key,
+                    hideLabel: tab.hideLabel,
+                    canClose: !!tab.canClose
+            };
+
+            if (!isNaN(tabIndex)){
+                this.dynTabs.splice(tabIndex, 0, tabDef);
+            }else{
+                this.dynTabs.push(tabDef);
+            }
+
+            if (activate){
+                this.setActiveTab(tab);
+                this.$forceUpdate();
+            }
           });
-
-          this.$slots[tab.key] = [node];
-          
-          const tabDef = {
-                label: tab.label,
-                icon: tab.icon,
-                key: tab.key,
-                hideLabel: tab.hideLabel,
-                canClose: !!tab.canClose
-          };
-
-          if (!isNaN(tabIndex)){
-              this.dynTabs.splice(tabIndex, 0, tabDef);
-          }else{
-              this.dynTabs.push(tabDef);
-          }
-
-          if (activate){
-            this.setActiveTab(tab);
-            this.$forceUpdate();
-          }
       },
 
       removeTab: function(tabKey){
