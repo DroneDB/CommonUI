@@ -54,7 +54,6 @@ export default {
 
       try{
         this.rawContent = await dataset.getFileContents(path);
-        console.log(this.rawContent);
         this.updateMarkdown();
       }catch(e){
         this.error = `Cannot fetch ${this.uri}: ${e}`;
