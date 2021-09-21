@@ -478,7 +478,7 @@ export default {
                             source: new HybridXYZ({
                                 url: file.path,
                                 tileSize: 256,
-                                transition: 0, // TODO: why transitions don't work?
+                                transition: 200,
                                 minZoom: 14,
                                 maxZoom: 22
                                 // TODO: get min/max zoom somehow?
