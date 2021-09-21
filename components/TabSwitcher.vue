@@ -4,6 +4,7 @@
                 :defaultTab="activeTab"
                 :position="position"
                 :buttonWidth="buttonWidth"
+                @closeTab="removeTab"
                 ref="topTabButtons"
                 v-if="position === 'top' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab" />
     <div class="tabs">
@@ -15,6 +16,7 @@
                 :defaultTab="activeTab"
                 :position="position"
                 :buttonWidth="buttonWidth"
+                @closeTab="removeTab"
                 ref="bottomTabButtons"
                 v-if="position === 'bottom' && (!hideSingle || dynTabs.length > 1)" @click="setActiveTab"/>
 </div>
@@ -53,6 +55,9 @@ export default {
       };
   },
   mounted: function(){
+      // Trigger first onTabActivated
+      const node = this.getNodeFor(this.activeTab);
+      if (node.onTabActivated) node.onTabActivated();
   },
   computed: {
       tabButtons: function(){
@@ -117,7 +122,8 @@ export default {
                 label: tab.label,
                 icon: tab.icon,
                 key: tab.key,
-                hideLabel: tab.hideLabel
+                hideLabel: tab.hideLabel,
+                canClose: !!tab.canClose
           };
 
           if (!isNaN(tabIndex)){
@@ -153,6 +159,9 @@ export default {
             if (tabToActivate !== -1){
                 this.setActiveTab(this.dynTabs[tabToActivate]);
             }
+
+            this.$slots[tabKey][0].componentInstance.$destroy();
+            delete this.$slots[tabKey];
           }else{
               console.warn(`Cannot remove tab with key: ${tabKey}`);
           }
