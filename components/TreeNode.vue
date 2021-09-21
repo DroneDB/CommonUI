@@ -104,11 +104,8 @@ export default {
             if (!this.isExpandable) 
                 return;
             
-            this.$log.info("TreeNode.addItems(items, this.node.entry)", clone(items), clone(this.node.entry));
-
             var parentPath = pathutils.getParentFolder(items[0].entry.path);
-            this.$log.info("Parent path", parentPath);
-                        
+
             if (parentPath == null) {
                 if (!this.node.root) {
                     return;
@@ -120,11 +117,12 @@ export default {
             }
             
             // Let's remove first the duplicates
-            this.children = this.children.filter(ch => items.filter(i => i.entry.path == ch.entry.path).length == 0);
+            this.children = this.children.filter(ch => items.find(i => i.entry.path !== ch.entry.path));
             
             // Add new items
-            for(var item of items)
+            for(var item of items){
                 this.children.push(item);
+            }
 
             if (!this.expanded) {
                 await this.expand();
@@ -132,8 +130,6 @@ export default {
             }
             
             this.sortChildren();
-
-            this.$log.info("Added");
 
         });
        
