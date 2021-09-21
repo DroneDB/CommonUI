@@ -40,7 +40,7 @@ import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { rootPath } from 'commonui/dynamic/pathutils';
-import { requestFullScreen, exitFullScreen, IsFullScreenCurrently } from 'commonui/classes/utils';
+import { requestFullScreen, exitFullScreen, isFullScreenCurrently, supportsFullScreen } from 'commonui/classes/utils';
 import { isMobile } from 'commonui/classes/responsive';
 
 import {Circle as CircleStyle, Fill, Stroke, Style, Text, Icon} from 'ol/style';
@@ -60,12 +60,11 @@ export default {
       }
   },
   data: function(){
-      return {
-        tools: [
+      const tools = [
             {
                 id: 'select-features',
                 title: "Select Features (CTRL)",
-                icon: "hand pointer outline",
+                icon: "mouse pointer",
                 exclusiveGroup: "select",
                 onSelect: () => {
                     this.selectSingle = true;
@@ -96,13 +95,16 @@ export default {
                 onClick: () => {
                     this.clearSelection();
                 }
-            },
-            {
+            }
+      ];
+
+      if (supportsFullScreen()){
+            tools.push({
                 id: 'fullscreen',
                 title: "Fullscreen (F11)",
-                icon: "desktop",
+                icon: "expand",
                 onClick: () => {
-                    if (IsFullScreenCurrently()){
+                    if (isFullScreenCurrently()){
                         exitFullScreen();
                     } else{
                         requestFullScreen(this.$el);
@@ -111,9 +113,11 @@ export default {
                         }, 500);
                     }
                 }
-            },            
-        ],
-
+            });
+      }
+      
+      return {
+        tools,
         selectSingle: false,
         selectArea: false,
 
@@ -480,7 +484,7 @@ export default {
                                 tileSize: 256,
                                 transition: 200,
                                 minZoom: 14,
-                                maxZoom: 22
+                                maxZoom: 23
                                 // TODO: get min/max zoom somehow?
                             })
                         });

@@ -136,9 +136,9 @@ export default {
         padding-right: 4px;
         border-radius: 4px;
         @media only screen and (max-width: 767px) {
-            width: 34px;
+            width: 35px;
             height: 34px;
-            padding-left: 6px;
+            padding-left: 7px;
             padding-right: 6px;
             padding-top: 2px;
         }

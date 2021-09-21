@@ -83,4 +83,9 @@ window.addEventListener("keyup",  e => {
 
 window.addEventListener("contextmenuopened", api.resetModifiers, false);
 
+// iOS fix, when keyboard is open it pushes the viewport out
+document.addEventListener('focusout', function(e) {
+    if (window.scrollY > 0) window.scrollTo(0, 0);
+});
+
 export default api;

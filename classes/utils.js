@@ -20,7 +20,7 @@ export function bytesToSize(bytes, decimals = 2){
 
 
 /* Is currently in full screen or not */
-export function IsFullScreenCurrently() {
+export function isFullScreenCurrently() {
 	var fse = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
 	
 	// If no element is in full-screen
@@ -28,6 +28,10 @@ export function IsFullScreenCurrently() {
 		return false;
 	else
 		return true;
+}
+
+export function supportsFullScreen(){
+    return !!(document.body.requestFullScreen || document.body.webkitRequestFullScreen || document.body.mozRequestFullScreen || document.body.msRequestFullScreen);
 }
 
 // https://stackoverflow.com/a/7525760
