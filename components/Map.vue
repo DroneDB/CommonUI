@@ -41,6 +41,7 @@ import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { rootPath } from 'commonui/dynamic/pathutils';
 import { requestFullScreen, exitFullScreen, IsFullScreenCurrently } from 'commonui/classes/utils';
+import { isMobile } from 'commonui/classes/responsive';
 
 import {Circle as CircleStyle, Fill, Stroke, Style, Text, Icon} from 'ol/style';
 
@@ -190,7 +191,7 @@ export default {
 
             return new Style({
                 image: new CircleStyle({
-                    radius: 8,
+                    radius: isMobile() ? 10 : 8,
                     fill: new Fill({
                         color: fill
                     }),
@@ -730,6 +731,7 @@ export default {
     flex-direction: column;
 }
 .map-container{
+    -webkit-tap-highlight-color:  rgba(255, 255, 255, 0); 
     position: relative;
     width: 100%;
     height: 100%;

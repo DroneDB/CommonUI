@@ -115,7 +115,13 @@ export default {
 
       if (this.fixedSize) {
         // Watch for changes in window content
-        this.observer = new MutationObserver(this.contentChanged);
+        if (ResizeObserver !== undefined){
+            this.observer = new ResizeObserver(this.contentChanged);
+        }else{
+            // Fallback, still works in most cases
+            this.observer = new MutationObserver(this.contentChanged);
+        }
+        
         this.observer.observe(this.$refs.content, {
             subtree: true,
             childList: true
@@ -138,11 +144,13 @@ export default {
       },
       centerWindow: function(){
           if (!this.$refs.window) return;
+
+          const box = this.$refs.window.getBoundingClientRect();
           
           const w = window.innerWidth;
           const h = window.innerHeight;
-          const ww = this.$refs.window.clientWidth;
-          const wh = this.$refs.window.clientHeight;
+          const ww = box.width;
+          const wh = box.height;
 
           this.winStyle.left = (50.0 - (ww / w * 100.0) / 2.0) + "%";
           this.winStyle.top = (50.0 - (wh / h * 100.0) / 2.0) + "%";

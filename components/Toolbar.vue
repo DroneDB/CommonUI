@@ -116,6 +116,9 @@ export default {
 
 <style scoped>
 .toolbar{
+    user-select: none;
+    -webkit-user-select: none;
+
     display: flex;
     background-image: linear-gradient(#fefefe, #f3f3f3);
     &.plain{
@@ -132,12 +135,26 @@ export default {
         padding-left: 4px;
         padding-right: 4px;
         border-radius: 4px;
+        @media only screen and (max-width: 767px) {
+            width: 34px;
+            height: 34px;
+            padding-left: 6px;
+            padding-right: 6px;
+            padding-top: 2px;
+        }
         margin-right: 1px;
         border: 1px solid transparent;
-        &:hover,&:active,&:focus,&.selected{
+        &.selected{
             cursor: pointer;
             border-color: #030A03;
             background: #fefefe;
+        }
+        @media (hover: hover) {
+            &:hover{
+                cursor: pointer;
+                border-color: #030A03;
+                background: #fefefe;
+            }
         }
         &:active{
             background: #f8f8f8;

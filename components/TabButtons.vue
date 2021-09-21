@@ -61,6 +61,8 @@ export default {
 .buttons{
     margin-top: auto;
     display: flex;
+    user-select: none;
+    -webkit-user-select: none;
 
     .fill, .tab-button{
         padding: 8px;

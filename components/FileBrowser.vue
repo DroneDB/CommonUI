@@ -221,6 +221,8 @@ export default {
     .loading {
         margin-left: 2px;
     }
+    user-select: none;
+    -webkit-user-select: none;
 
     height: 100%;
     min-width: 100%;

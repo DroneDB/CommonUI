@@ -242,6 +242,12 @@ export default {
         }
     }
 
+    @media only screen and (max-width: 767px){
+        .entry{
+            padding: 4px;
+        }
+    }
+
     i{
         display: inline-block;
         margin-top: 1px;
