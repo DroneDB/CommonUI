@@ -1,9 +1,4 @@
 <template>
-<!--    <div v-if="parentRef[bindTo]" class="ui message" :class="className">
-        <i class="close icon" @click="dismiss"></i>
-        <span v-html="parentRef[bindTo]" />
-    </div>-->    
-
     <div>
         <div v-if="Array.isArray(obj)" style="display: flex; align-items: center; flex-wrap: wrap">
             <div v-for="(item, index) in obj" style="margin: 5px; padding: 5px">
