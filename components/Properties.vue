@@ -1,7 +1,7 @@
 <template>
     <Window title="Properties" id="properties" @onClose="$emit('onClose', $event, arguments[1])">
     <div v-if="files.length === 1">
-        <table class="ui celled definition unstackable table">
+        <table class="ui compact celled definition unstackable table">
             <tbody>
                 <tr>
                     <td>Name</td>
@@ -17,10 +17,11 @@
                 </tr>
             </tbody>
         </table>
+        <ObjTable v-if="files[0].entry.properties != null" :obj="files[0].entry.properties"></ObjTable>
     </div>
     <div v-if="files.length >= 2">
         <div>{{files.length}} items</div>
-        <table class="ui celled definition unstackable table mt">
+        <table class="ui compact celled definition unstackable table mt">
             <tbody>
                 <tr>
                     <td>Size</td>
@@ -38,12 +39,13 @@
 
 <script>
 import Window from './Window.vue';
+import ObjTable from './ObjTable.vue';
 import { bytesToSize } from '../classes/utils';
 import ddb from 'ddb';
 
 export default {
   components: {
-      Window
+      Window, ObjTable
   },
   props: ['files'],
   data: function(){
