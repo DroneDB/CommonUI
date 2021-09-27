@@ -96,8 +96,13 @@ export default {
             return this.files.filter(f => f.selected);
         },
         filterFiles: function() {
-            //if (this.selectedFiles.length > 0) this.selectedFiles.forEach(f => f.selected = false);
-            return (this.filter == null || this.filter.length == 0) ? this.files : this.files.filter(i => i.entry.path.includes(this.filter));
+            
+            if (this.filter == null || this.filter.length == 0) {
+                return this.files;
+            } else {
+                var lowerFilter = this.filter.toLowerCase();
+                return this.files.filter(i => i.entry.path.toLowerCase().includes(lowerFilter));
+            }  
         }
     },
     mounted: function () {
