@@ -7,7 +7,7 @@
         </div>
 
         <div class="potree-container" :class="{loading}">
-            <div id="potree_sidebar_container"> </div>
+            <div id="potree_sidebar_container" ref="sidebar"> </div>
             <div id="potree_render_area" ref="container"></div>
         </div>
     </div>
@@ -52,6 +52,7 @@ export default {
                 const pointCloudFiles = this.files.filter(f => f.entry.type === ddb.entry.type.POINTCLOUD);
                 await Promise.all(pointCloudFiles.map(this.addPointCloud));
                 this.viewer.fitToScreen();
+                if (pointCloudFiles.length === 0) this.error = "No point cloud files selected. Select one or more point cloud files to display them.";
             }catch(e){
                 this.error = e.message;
             }finally{
@@ -60,6 +61,8 @@ export default {
         }
       },
       reloadViewer: async function(){
+        this.error = "";
+
         if (this.viewer){
             this.viewer = null;
             this.$refs.container.innerHTML = '';
@@ -95,25 +98,31 @@ export default {
 
         this.loaded = true;
         this.viewer = viewer;
+        console.log(this.viewer);
 
         await this.loadPointClouds();
       },
       addPointCloud: async function(file){
           return new Promise(async (resolve, reject) => {
             const entry = ddb.utils.entryFromFile(file);
-            const eptUrl = await entry.getEpt();
 
-            Potree.loadPointCloud(eptUrl, file.label, e => {
-                if (e.type == "loading_failed"){
-                    reject(`Cannot load ${file.label}, we're still building it. Try again in a few minutes.`);
-                    return;
-                }
+            try{
+                const eptUrl = await entry.getEpt();
 
-                this.viewer.scene.addPointCloud(e.pointcloud);
-                e.pointcloud.material.size = 1;
+                Potree.loadPointCloud(eptUrl, file.label, e => {
+                    if (e.type == "loading_failed"){
+                        reject(new Error(`Cannot load ${file.label}, we're still building it. Try again in a few minutes.`));
+                        return;
+                    }
 
-                resolve();
-            });
+                    this.viewer.scene.addPointCloud(e.pointcloud);
+                    e.pointcloud.material.size = 1;
+
+                    resolve();
+                });
+            }catch(e){
+                reject(new Error(`${file.label} is being built. Try to refresh the page in a few minutes!`));
+            }
           });
       },
       onTabActivated: async function(){
@@ -184,6 +193,10 @@ export default {
 
 <style>
 #potree{
+    .ui.message{
+        margin: 8px;
+    }
+
     background: #030A03;
     width: 100%;
     height: 100%;
