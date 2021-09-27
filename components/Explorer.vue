@@ -156,10 +156,10 @@ export default {
             }, 250);
         },
         selectAll: function () {
-            this.filterFiles().forEach(f => f.selected = true);
+            this.filterFiles.forEach(f => f.selected = true);
         },
         deselectAll: function () {
-            this.filterFiles().forEach(f => f.selected = false);
+            this.filterFiles.forEach(f => f.selected = false);
         },
         clearSelection: function() {
             this.files.forEach(f => f.selected = false);
