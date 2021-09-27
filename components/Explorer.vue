@@ -10,7 +10,7 @@
     </div>
     <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
     <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
-    <Thumbnail v-for="(f, idx) in filterFiles()" 
+    <Thumbnail v-for="(f, idx) in filterFiles" 
                 :file="f" 
                 :key="f.path" 
                 :data-idx="idx" 
@@ -94,7 +94,11 @@ export default {
     computed: {
         selectedFiles: function () {
             return this.files.filter(f => f.selected);
-        }        
+        },
+        filterFiles: function() {
+            //if (this.selectedFiles.length > 0) this.selectedFiles.forEach(f => f.selected = false);
+            return (this.filter == null || this.filter.length == 0) ? this.files : this.files.filter(i => i.entry.path.includes(this.filter));
+        }
     },
     mounted: function () {
         this.rangeStartThumb = null;
@@ -103,10 +107,7 @@ export default {
         this.lazyLoadThumbs();
     },
     methods: {
-        filterFiles: function() {
-            //if (this.selectedFiles.length > 0) this.selectedFiles.forEach(f => f.selected = false);
-            return (this.filter == null || this.filter.length == 0) ? this.files : this.files.filter(i => i.entry.path.includes(this.filter));
-        },
+
         onTabActivated: function(){
             this.$nextTick(() => {
                 this.lazyLoadThumbs();
