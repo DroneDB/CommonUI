@@ -1,6 +1,12 @@
 <template>
 <div class="file-browser">
     <ContextMenu :items="contextMenu" />
+    <div id="search-box">
+        <div id="cancel" :style="{visibility: filter != null && filter.length > 0 ? 'visible' : 'hidden'}" v-on:click="clearSearch()">
+            <i class="icon cancel"></i></div>
+        <input type="text" v-model="filter" v-on:keyup.enter="search()">
+        <div id="src" v-on:click="search()"><i class="icon search"></i></div>        
+    </div>
     <TreeView :nodes="nodes" @selectionChanged="handleSelectionChanged" @opened="handleOpen" :getChildren="getChildren" />
 
     <div v-if="loading" class="loading">
@@ -61,20 +67,97 @@ export default {
             nodes: [],
             loading: true,
             lastSelectedNode: null,
-            contextMenu
+            contextMenu,
+            filter: null,
+            searchStaticPaths: null
         };
     },
     mounted: async function () {
         await this.refreshNodes();
-
     },
     beforeDestroy: function () {
     },
     methods: {
 
+        clearSearch: async function() {
+            this.filter = null;
+            this.searchStaticPaths = null;
+            await this.refreshNodes();
+        },
+
+        search: async function() {
+            this.$log.info("search");
+            
+            try {
+
+                var rootPath = this.nodes[0].path;
+
+                var query = this.filter;
+                
+                if (!query.includes('*') && !query.includes('*'))
+                    query = "*" + query + "*";
+                
+                this.$log.info("Expanded query '" + query + "'");
+
+                const entries = await ddb.searchEntries(rootPath, query);
+                this.$log.info("Items", clone(entries));
+
+                var res = entries.filter(entry => {
+                        return pathutils.basename(entry.path)[0] != "." // Hidden files/folders
+                    })
+                    .sort((a, b) => {
+                        // Folders first
+                        let aDir = ddb.entry.isDirectory(a);
+                        let bDir = ddb.entry.isDirectory(b);
+
+                        if (aDir && !bDir) return -1;
+                        else if (!aDir && bDir) return 1;
+                        else {
+                            // then filename ascending
+                            return pathutils.basename(a.path.toLowerCase()) > pathutils.basename(b.path.toLowerCase()) ? 1 : -1
+                        }
+                    })
+                    .map(entry => {
+                        const base = pathutils.basename(entry.path);
+                        return {
+                            icon: icons.getForType(entry.type),
+                            label: base,
+                            path: pathutils.join(rootPath, entry.path),
+                            selected: false,
+                            entry,
+                            isExpandable: ddb.entry.isDirectory(entry)
+                        }
+                    });
+
+                this.$log.info("Entries", clone(res));
+
+                this.searchStaticPaths = {};
+                this.searchStaticPaths[rootPath] = res;
+                
+                await this.refreshNodes();
+                
+            } catch (e) {
+                this.$log.error("Exception", clone(e));
+
+                if (e.message == "Unauthorized"){
+                    this.$emit('error', "You are not allowed to perform this action", "Load entries");
+                } else {
+                    this.$emit('error', e, "Load entries");
+                }
+                
+                this.nodes = [];
+
+            }
+        },
+
         getChildren: async function(path) {
 
             this.$log.info("getChildren(path)", path);
+
+            if (this.searchStaticPaths != null && (typeof this.searchStaticPaths[path] !== 'undefined')) {
+                this.$log.info("using static path");
+                return this.searchStaticPaths[path];
+            }
 
             try {
                 const entries = await ddb.fetchEntries(path, {
@@ -128,8 +211,9 @@ export default {
 
         refreshNodes: async function() {
 
-            this.nodes = [];
+            this.$log.info("refreshNodes");
 
+            this.nodes = [];
             this.loading = true;
 
             const rootNodes = await this.rootNodes();
@@ -228,5 +312,34 @@ export default {
     height: 100%;
     min-width: 100%;
     min-height: 100px;
+}
+
+#search-box {
+    
+    display: flex;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid black;
+
+    input {
+        width: 100%;
+        text-align: center;
+        margin-top: 8px;
+        margin-left: 8px;
+    }
+
+    #cancel {
+        cursor: pointer;
+        margin-top: 8px;
+        visibility: hidden;
+        margin-left: 8px;
+    }
+
+    #src {
+        margin-left: 8px;
+        margin-top: 8px;
+        margin-right: 8px;    
+        cursor: pointer;
+    }
 }
 </style>
