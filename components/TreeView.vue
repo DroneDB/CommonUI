@@ -46,8 +46,6 @@ export default {
 
         if (!node) return; // Top
 
-        this.$log.info("handleSelection(node, mouseBtn)", clone(node.node), clone(mouseBtn));
-
         if (node.node.unselectable) return; // Not selectable
         if (mouseBtn === Mouse.RIGHT && this.selectedNodes.length > 1) return; // Prevent accidental deselection
 

@@ -66,6 +66,13 @@ export default {
         }
 
         contextMenu = contextMenu.concat([{
+                    label: 'Open Item',
+                    click: () => {
+                        this.selectedFiles.forEach(f => {
+                            this.$emit('openItem', f);
+                        });
+                    }
+                },{
                     label: "Select All/None",
                     accelerator: "CmdOrCtrl+A",
                     click: () => {
@@ -166,22 +173,19 @@ export default {
         },
         handleOpen: async function (thumb) {
             const file = thumb.file;
-            this.$log.info("Explorer.handleOpen(thumb))", thumb);
 
             this.filter = null;
 
             if (entry.isDirectory(file.entry)) {
                 this.$root.$emit("folderOpened", pathutils.getTree(file.entry.path));
             } else {
-                shell.openItem(file.path);
+                this.$emit('openItem', file);
             }
         },
         handleSelection: function (thumb, mouseBtn) {
             if (!thumb) return; // Top
             // if (mouseBtn === Mouse.RIGHT && this.selectedFiles.length > 1) return; // Prevent accidental deselection
             const file = thumb.file;
-
-            this.$log.info("Explorer.handleSelection(thumb, mouseBtn", thumb, mouseBtn);
 
             if (Keyboard.isShiftPressed() && this.selectedFiles.length > 0 && this.rangeStartThumb) {
                 // Range selection

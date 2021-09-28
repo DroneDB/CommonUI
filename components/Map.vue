@@ -40,7 +40,8 @@ import Toolbar from './Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { rootPath } from 'commonui/dynamic/pathutils';
-import { requestFullScreen, exitFullScreen, IsFullScreenCurrently } from 'commonui/classes/utils';
+import { requestFullScreen, exitFullScreen, isFullScreenCurrently, supportsFullScreen } from 'commonui/classes/utils';
+import { isMobile } from 'commonui/classes/responsive';
 
 import {Circle as CircleStyle, Fill, Stroke, Style, Text, Icon} from 'ol/style';
 
@@ -48,14 +49,22 @@ export default {
   components: {
       Map, Toolbar
   },
-  props: ['files'],
+  props: {
+      files: {
+          type: Array,
+          required: true
+      },
+      lazyload: {
+          type: Boolean,
+          default: false
+      }
+  },
   data: function(){
-      return {
-        tools: [
+      const tools = [
             {
                 id: 'select-features',
                 title: "Select Features (CTRL)",
-                icon: "hand pointer outline",
+                icon: "mouse pointer",
                 exclusiveGroup: "select",
                 onSelect: () => {
                     this.selectSingle = true;
@@ -86,13 +95,16 @@ export default {
                 onClick: () => {
                     this.clearSelection();
                 }
-            },
-            {
+            }
+      ];
+
+      if (supportsFullScreen()){
+            tools.push({
                 id: 'fullscreen',
                 title: "Fullscreen (F11)",
-                icon: "desktop",
+                icon: "expand",
                 onClick: () => {
-                    if (IsFullScreenCurrently()){
+                    if (isFullScreenCurrently()){
                         exitFullScreen();
                     } else{
                         requestFullScreen(this.$el);
@@ -101,9 +113,11 @@ export default {
                         }, 500);
                     }
                 }
-            },            
-        ],
-
+            });
+      }
+      
+      return {
+        tools,
         selectSingle: false,
         selectArea: false,
 
@@ -128,363 +142,7 @@ export default {
       };
   },
   mounted: function(){
-    this._updateMap = null;
-
-    const genShotStyle = (fill, stroke, size) => {
-        let text = null;
-        if (size > 1){
-            text = new Text({
-                text: size.toString(),
-                font: 'bold 14px sans-serif',
-                fill: new Fill({
-                    color: 'rgba(252, 252, 255, 1)'
-                })
-            });
-        }
-
-        return new Style({
-            image: new CircleStyle({
-                radius: 8,
-                fill: new Fill({
-                    color: fill
-                }),
-                stroke: new Stroke({
-                    color: stroke,
-                    width: 2
-                })
-            }),
-            text
-        });
-    };
-
-    this.styles = {
-        shot: feats => {
-            let styleId = `_shot-${feats.length}`;
-            let selected = false;
-
-            for (let i = 0; i < feats.length; i++){
-                if (feats[i].file && feats[i].file.selected){
-                    styleId = `_shot-selected-${feats.length}`;
-                    selected = true;
-                    break;
-                }
-            }
-            
-            // Memoize
-            if (!this.styles[styleId]){
-                if (selected) this.styles[styleId] = genShotStyle('rgba(255, 158, 103, 1)', 'rgba(252, 252, 255, 1)', feats.length);
-                else this.styles[styleId] = genShotStyle('rgba(75, 150, 243, 1)', 'rgba(252, 252, 255, 1)', feats.length);
-            }
-
-            return this.styles[styleId];
-        },
-
-        'shot-outlined': feats => {
-            let styleId = `_shot-outlined-${feats.length}`;
-
-            // Memoize
-            if (!this.styles[styleId]){
-                this.styles[styleId] = genShotStyle('rgba(253, 226, 147, 1)', 'rgba(252, 252, 255, 1)', feats.length);
-            }
-
-            return this.styles[styleId];
-        },
-
-        outline: new Style({
-            stroke: new Stroke({
-                color: 'rgba(253, 226, 147, 1)',
-                width: 6
-            })
-        }),
-
-        pointcloud: new Style({
-            stroke: new Stroke({
-                color: 'rgba(253, 226, 147, 1)',
-                width: 6
-            })
-        }),
-
-        invisible: new Style({
-            fill: new Fill({
-                color: 'rgba(0, 0, 0, 0)'
-            })
-        }),
-
-        startFlag: new Style({
-            image: new Icon({
-                anchor: [0.05, 1],
-                anchorXUnits: 'fraction',
-                anchorYUnits: 'fraction',
-                src: rootPath('images/start-flag.svg'),
-            })
-        }),
-
-        finishFlag: new Style({
-            image: new Icon({
-                anchor: [0.05, 1],
-                anchorXUnits: 'fraction',
-                anchorYUnits: 'fraction',
-                src: rootPath('images/finish-flag.svg'),
-            })
-        }),
-
-        flightPath: new Style({
-            stroke: new Stroke({
-                color: 'rgba(75, 150, 243, 1)', //'rgba(253, 226, 147, 1)',
-                width: 4
-            })
-        })
-    };
-
-    this.fileFeatures = new VectorSource();
-    const clusterSource = new Cluster({
-        distance: 0.0001,
-        source: this.fileFeatures
-    });
-    this.fileLayer = new VectorLayer({
-        source: clusterSource,
-        style: cluster => {
-            const feats = cluster.get('features');
-            const s = this.styles[feats[0].style];
-            if (typeof s === "function") return s(feats);
-            else return s;
-        }
-    });
-    this.rasterLayer = new LayerGroup();
-
-    this.extentsFeatures = new VectorSource();
-    this.extentLayer = new VectorLayer({
-        source: this.extentsFeatures,
-        style: this.styles.invisible
-    });
-
-    this.outlineFeatures = new VectorSource();
-    this.outlineLayer = new VectorLayer({
-        source: this.outlineFeatures,
-        style: this.styles.outline
-    });
-    this.footprintRastersLayer = new LayerGroup();
-
-    this.flightPathFeatures = new VectorSource();
-    this.flightPathLayer = new VectorLayer({
-        source: this.flightPathFeatures
-    });
-    this.markerFeatures = new VectorSource();
-    this.markerLayer = new VectorLayer({
-        source: this.markerFeatures
-    });
-
-    this.topLayers = new LayerGroup();
-    this.topLayers.setLayers(new Collection([
-        this.flightPathLayer,
-        this.fileLayer,
-        this.markerLayer
-    ]));
-
-    this.pointCloudFeatures = new VectorSource();
-    this.pointCloudLayer = new VectorLayer({
-        source: this.pointCloudFeatures,
-        style: this.styles.pointcloud
-    });
-
-    this.dragBox = new DragBox({minArea: 0});
-    this.dragBox.on('boxend', () => {
-        let extent = this.dragBox.getGeometry().getExtent();
-
-        // Select (default) or deselect (if all features are previously selected)
-        const intersect = [];
-
-        [this.fileFeatures, this.extentsFeatures].forEach(layer => {
-            layer.forEachFeatureIntersectingExtent(extent, feat => {
-                intersect.push(feat);
-            });
-        });
-
-        let deselect = false;
-        
-        // Clear previous
-        if (!Keyboard.isShiftPressed()){
-            this.clearSelection();
-        }else{
-            deselect = intersect.length > 0 && intersect.filter(feat => feat.file.selected).length === intersect.length;
-        }
-        
-        if (deselect){
-            intersect.forEach(feat => feat.file.selected = false);
-        }else{
-            let scrolled = false;
-            intersect.forEach(feat => {
-                feat.file.selected = true;
-
-                if (!scrolled){
-                    this.$emit("scrollTo", feat.file);
-                    scrolled = true;
-                }
-            });
-        }
-    });
-
-    this.basemapLayer = new TileLayer({
-        source: new XYZ({
-            url: this.basemaps[this.selectedBasemap].url,
-            attributions: this.basemaps[this.selectedBasemap].attributions
-        })
-    });
-
-    this.map = new Map({
-        target: this.$refs['map-container'],
-        layers: [
-            this.basemapLayer,
-            this.rasterLayer,
-            this.pointCloudLayer,
-            this.footprintRastersLayer,
-            this.extentLayer,
-            this.outlineLayer,
-            this.topLayers,
-        ],
-        view: new View({
-            center: [0, 0],
-            zoom: 2
-        })
-    });
-
-    const doSelectSingle = e => {
-        let first = true;
-
-        this.map.forEachFeatureAtPixel(e.pixel, feat => {
-            // Only select the first entry
-            if (!first) return;
-            first = false;
-
-            const feats = feat.get('features');
-            if (feats){
-                // Geoimage point cluster
-                let selected = false;
-                for (let i = 0; i < feats.length; i++){
-                    if (feats[i].file && feats[i].file.selected){
-                        selected = true;
-                        break;
-                    }
-                }
-
-                for (let i = 0; i < feats.length; i++){
-                    if (feats[i].file) feats[i].file.selected = !selected;
-                }
-
-                // Inform other components we should scroll to this file
-                if (!selected && feats.length && feats[0].file){
-                    this.$emit("scrollTo", feats[0].file);
-                }
-            }else{
-                // Extents selection
-                if (feat.file) feat.file.selected = !feat.file.selected;
-            }
-        });
-    };
-
-    this.map.on('click', e => {
-        // Single selection
-        if (this.selectSingle){
-            doSelectSingle(e);
-        }else{
-          // Remove all
-          this.outlineFeatures.forEachFeature(outline => {
-                this.outlineFeatures.removeFeature(outline);
-                
-                // Deselect style
-                if (outline.feat.get('features')){
-                    outline.feat.get('features').forEach(f => {
-                        f.style = 'shot';
-                    });
-                }
-
-                delete(outline.feat.outline);
-          });
-          this.clearLayerGroup(this.footprintRastersLayer);
-          this.topLayers.setVisible(true);
-        
-          // Add selected
-          this.map.forEachFeatureAtPixel(e.pixel, feat => {
-            if (!feat.outline){
-                let outline = null;
-
-                if (feat.get('features')){
-                    // Geoimage (point cluster)
-                    const file = feat.get('features')[0].file;
-                    if (file.entry.polygon_geom){
-                        const coords = coordAll(file.entry.polygon_geom);
-                        outline = new Feature(new Polygon([coords]));
-                        outline.getGeometry().transform('EPSG:4326', 'EPSG:3857');
-                    }
-                    
-                    // Nothing else to do
-                    if (!outline) return;
-                    
-                    // Set style
-                    feat.get('features').forEach(f => {
-                        f.style = 'shot-outlined';
-                    });
-
-                    // Add geoprojected raster footprint
-                    const rasterFootprint = new TileLayer({
-                        extent: outline.getGeometry().getExtent(), 
-                        source: new HybridXYZ({
-                            url: file.path,
-                            tileSize: 256,
-                            transition: 0, // TODO: why transitions don't work?
-                            minZoom: 14,
-                            maxZoom: 22
-                            // TODO: get min/max zoom somehow?
-                        })
-                    });
-                    // tileLayer.file = f;
-                    this.footprintRastersLayer.getLayers().push(rasterFootprint);
-                }else{
-                    // Extent
-                    outline = feat;
-                }
-
-                this.outlineFeatures.addFeature(outline);
-
-                // Add reference to self (for deletion later)
-                outline.feat = feat;
-                feat.outline = outline;
-
-                this.topLayers.setVisible(false);
-            }
-          }, { 
-              layerFilter: layer => {
-                  return layer.getVisible() && 
-                        (layer === this.fileLayer ||
-                         layer === this.extentLayer);
-              }
-          });
-          
-          // Update styles
-          this.fileLayer.changed();
-        }
-    });
-
-    // Right click
-    this.map.on('contextmenu', e => {
-        // Single selection
-        doSelectSingle(e);
-
-        e.stopPropagation();
-        e.preventDefault();
-        return false;
-    });
-
-    this.$root.$on('addItems', () => {
-        this.reloadFileLayers();
-    });
-
-    Keyboard.onKeyDown(this.handleKeyDown);
-    Keyboard.onKeyUp(this.handleKeyUp);
-
-    // Redraw, otherwise openlayers does not draw
-    // the map correctly
-    setTimeout(() => this.map.updateSize(), 1);
+    if (!this.lazyload) this.loadMap();
   },
   beforeDestroy: function(){
     Keyboard.offKeyDown(this.handleKeyDown);
@@ -517,14 +175,394 @@ export default {
       }
   },
   methods: {
+      loadMap: function(){
+        if (this.loaded) return;
+
+        this.loaded = true;
+        this._updateMap = null;
+
+        const genShotStyle = (fill, stroke, size) => {
+            let text = null;
+            if (size > 1){
+                text = new Text({
+                    text: size.toString(),
+                    font: 'bold 14px sans-serif',
+                    fill: new Fill({
+                        color: 'rgba(252, 252, 255, 1)'
+                    })
+                });
+            }
+
+            return new Style({
+                image: new CircleStyle({
+                    radius: isMobile() ? 10 : 8,
+                    fill: new Fill({
+                        color: fill
+                    }),
+                    stroke: new Stroke({
+                        color: stroke,
+                        width: 2
+                    })
+                }),
+                text
+            });
+        };
+
+        this.styles = {
+            shot: feats => {
+                let styleId = `_shot-${feats.length}`;
+                let selected = false;
+
+                for (let i = 0; i < feats.length; i++){
+                    if (feats[i].file && feats[i].file.selected){
+                        styleId = `_shot-selected-${feats.length}`;
+                        selected = true;
+                        break;
+                    }
+                }
+                
+                // Memoize
+                if (!this.styles[styleId]){
+                    if (selected) this.styles[styleId] = genShotStyle('rgba(255, 158, 103, 1)', 'rgba(252, 252, 255, 1)', feats.length);
+                    else this.styles[styleId] = genShotStyle('rgba(75, 150, 243, 1)', 'rgba(252, 252, 255, 1)', feats.length);
+                }
+
+                return this.styles[styleId];
+            },
+
+            'shot-outlined': feats => {
+                let styleId = `_shot-outlined-${feats.length}`;
+
+                // Memoize
+                if (!this.styles[styleId]){
+                    this.styles[styleId] = genShotStyle('rgba(253, 226, 147, 1)', 'rgba(252, 252, 255, 1)', feats.length);
+                }
+
+                return this.styles[styleId];
+            },
+
+            outline: new Style({
+                stroke: new Stroke({
+                    color: 'rgba(253, 226, 147, 1)',
+                    width: 6
+                })
+            }),
+
+            pointcloud: new Style({
+                stroke: new Stroke({
+                    color: 'rgba(253, 226, 147, 1)',
+                    width: 6
+                })
+            }),
+
+            invisible: new Style({
+                fill: new Fill({
+                    color: 'rgba(0, 0, 0, 0)'
+                })
+            }),
+
+            startFlag: new Style({
+                image: new Icon({
+                    anchor: [0.05, 1],
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'fraction',
+                    src: rootPath('images/start-flag.svg'),
+                })
+            }),
+
+            finishFlag: new Style({
+                image: new Icon({
+                    anchor: [0.05, 1],
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'fraction',
+                    src: rootPath('images/finish-flag.svg'),
+                })
+            }),
+
+            flightPath: new Style({
+                stroke: new Stroke({
+                    color: 'rgba(75, 150, 243, 1)', //'rgba(253, 226, 147, 1)',
+                    width: 4
+                })
+            })
+        };
+
+        this.fileFeatures = new VectorSource();
+        const clusterSource = new Cluster({
+            distance: 0.0001,
+            source: this.fileFeatures
+        });
+        this.fileLayer = new VectorLayer({
+            source: clusterSource,
+            style: cluster => {
+                const feats = cluster.get('features');
+                const s = this.styles[feats[0].style];
+                if (typeof s === "function") return s(feats);
+                else return s;
+            }
+        });
+        this.rasterLayer = new LayerGroup();
+
+        this.extentsFeatures = new VectorSource();
+        this.extentLayer = new VectorLayer({
+            source: this.extentsFeatures,
+            style: this.styles.invisible
+        });
+
+        this.outlineFeatures = new VectorSource();
+        this.outlineLayer = new VectorLayer({
+            source: this.outlineFeatures,
+            style: this.styles.outline
+        });
+        this.footprintRastersLayer = new LayerGroup();
+
+        this.flightPathFeatures = new VectorSource();
+        this.flightPathLayer = new VectorLayer({
+            source: this.flightPathFeatures
+        });
+        this.markerFeatures = new VectorSource();
+        this.markerLayer = new VectorLayer({
+            source: this.markerFeatures
+        });
+
+        this.topLayers = new LayerGroup();
+        this.topLayers.setLayers(new Collection([
+            this.flightPathLayer,
+            this.fileLayer,
+            this.markerLayer
+        ]));
+
+        this.pointCloudFeatures = new VectorSource();
+        this.pointCloudLayer = new VectorLayer({
+            source: this.pointCloudFeatures,
+            style: this.styles.pointcloud
+        });
+
+        this.dragBox = new DragBox({minArea: 0});
+        this.dragBox.on('boxend', () => {
+            let extent = this.dragBox.getGeometry().getExtent();
+
+            // Select (default) or deselect (if all features are previously selected)
+            const intersect = [];
+
+            [this.fileFeatures, this.extentsFeatures].forEach(layer => {
+                layer.forEachFeatureIntersectingExtent(extent, feat => {
+                    intersect.push(feat);
+                });
+            });
+
+            let deselect = false;
+            
+            // Clear previous
+            if (!Keyboard.isShiftPressed()){
+                this.clearSelection();
+            }else{
+                deselect = intersect.length > 0 && intersect.filter(feat => feat.file.selected).length === intersect.length;
+            }
+            
+            if (deselect){
+                intersect.forEach(feat => feat.file.selected = false);
+            }else{
+                let scrolled = false;
+                intersect.forEach(feat => {
+                    feat.file.selected = true;
+
+                    if (!scrolled){
+                        this.$emit("scrollTo", feat.file);
+                        scrolled = true;
+                    }
+                });
+            }
+        });
+
+        this.basemapLayer = new TileLayer({
+            source: new XYZ({
+                url: this.basemaps[this.selectedBasemap].url,
+                attributions: this.basemaps[this.selectedBasemap].attributions
+            })
+        });
+
+        this.map = new Map({
+            target: this.$refs['map-container'],
+            layers: [
+                this.basemapLayer,
+                this.rasterLayer,
+                this.pointCloudLayer,
+                this.footprintRastersLayer,
+                this.extentLayer,
+                this.outlineLayer,
+                this.topLayers,
+            ],
+            view: new View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        const doSelectSingle = e => {
+            let first = true;
+
+            this.map.forEachFeatureAtPixel(e.pixel, feat => {
+                // Only select the first entry
+                if (!first) return;
+                first = false;
+
+                const feats = feat.get('features');
+                if (feats){
+                    // Geoimage point cluster
+                    let selected = false;
+                    for (let i = 0; i < feats.length; i++){
+                        if (feats[i].file && feats[i].file.selected){
+                            selected = true;
+                            break;
+                        }
+                    }
+
+                    for (let i = 0; i < feats.length; i++){
+                        if (feats[i].file) feats[i].file.selected = !selected;
+                    }
+
+                    // Inform other components we should scroll to this file
+                    if (!selected && feats.length && feats[0].file){
+                        this.$emit("scrollTo", feats[0].file);
+                    }
+                }else{
+                    // Extents selection
+                    if (feat.file) feat.file.selected = !feat.file.selected;
+                }
+            });
+        };
+
+        this.map.on('click', e => {
+            // Single selection
+            if (this.selectSingle){
+                doSelectSingle(e);
+            }else{
+            // Remove all
+            this.outlineFeatures.forEachFeature(outline => {
+                    this.outlineFeatures.removeFeature(outline);
+                    
+                    // Deselect style
+                    if (outline.feat.get('features')){
+                        outline.feat.get('features').forEach(f => {
+                            f.style = 'shot';
+                        });
+                    }
+
+                    delete(outline.feat.outline);
+            });
+            this.clearLayerGroup(this.footprintRastersLayer);
+            this.topLayers.setVisible(true);
+            
+            // Add selected
+            this.map.forEachFeatureAtPixel(e.pixel, feat => {
+                if (!feat.outline){
+                    let outline = null;
+
+                    if (feat.get('features')){
+                        // Geoimage (point cluster)
+                        const file = feat.get('features')[0].file;
+                        if (file.entry.polygon_geom){
+                            const coords = coordAll(file.entry.polygon_geom);
+                            outline = new Feature(new Polygon([coords]));
+                            outline.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+                        }
+                        
+                        // Nothing else to do
+                        if (!outline) return;
+                        
+                        // Set style
+                        feat.get('features').forEach(f => {
+                            f.style = 'shot-outlined';
+                        });
+
+                        // Add geoprojected raster footprint
+                        const rasterFootprint = new TileLayer({
+                            extent: outline.getGeometry().getExtent(), 
+                            source: new HybridXYZ({
+                                url: file.path,
+                                tileSize: 256,
+                                transition: 200,
+                                minZoom: 14,
+                                maxZoom: 23
+                                // TODO: get min/max zoom somehow?
+                            })
+                        });
+                        // tileLayer.file = f;
+                        this.footprintRastersLayer.getLayers().push(rasterFootprint);
+                    }else{
+                        // Extent
+                        outline = feat;
+                    }
+
+                    this.outlineFeatures.addFeature(outline);
+
+                    // Add reference to self (for deletion later)
+                    outline.feat = feat;
+                    feat.outline = outline;
+
+                    this.topLayers.setVisible(false);
+                }
+            }, { 
+                layerFilter: layer => {
+                    return layer.getVisible() && 
+                            (layer === this.fileLayer ||
+                            layer === this.extentLayer);
+                }
+            });
+            
+            // Update styles
+            this.fileLayer.changed();
+            }
+        });
+
+        // Right click
+        this.map.on('contextmenu', e => {
+            // Single selection
+            doSelectSingle(e);
+
+            e.stopPropagation();
+            e.preventDefault();
+            return false;
+        });
+
+        this.$root.$on('addItems', () => {
+            this.reloadFileLayers();
+        });
+
+        Keyboard.onKeyDown(this.handleKeyDown);
+        Keyboard.onKeyUp(this.handleKeyUp);
+
+        // Redraw, otherwise openlayers does not draw
+        // the map correctly
+        setTimeout(() => this.map.updateSize(), 1);
+      },
       onPanelResized: function(){
         // Redraw when map is resized (via panels)
         this.map.updateSize();
       },
       onTabActivated: function(){
-        this.$nextTick(() => {
-            this.map.updateSize();
-        });
+        if (!this.loaded){
+            this.loadMap();
+            this.reloadFileLayers();
+        }else{
+            this.$nextTick(() => {
+                if (this.map) this.map.updateSize();
+            });
+        }
+      },
+      zoomToFilesExtent: function(){
+        const ext = this.getSelectedFilesExtent();
+        if (!isEmptyExtent(ext)){
+            // Zoom to it
+            setTimeout(() => {
+                this.map.getView().fit(ext, { 
+                    padding: [40, 40, 40, 40], 
+                    duration: 500,
+                    minResolution: 0.5
+                });
+            }, 10);
+        }
       },
       getSelectedFilesExtent: function(){
           const ext = createEmptyExtent();
@@ -550,6 +588,8 @@ export default {
           this.mouseInside = flag;
       },
       reloadFileLayers: function(){
+        if (!this.loaded) return;
+
         this.fileFeatures.clear();
         this.outlineFeatures.clear();
         this.flightPathFeatures.clear();
@@ -641,18 +681,7 @@ export default {
             this.flightPathFeatures.addFeature(pathFeat);
         }
 
-        const ext = this.getSelectedFilesExtent();
-        if (!isEmptyExtent(ext)){
-            // Zoom to it
-            setTimeout(() => {
-                this.map.getView().fit(ext, { 
-                    padding: [40, 40, 40, 40], 
-                    duration: 500,
-                    minResolution: 0.5
-                });
-            }, 10);
-        }
-
+        this.zoomToFilesExtent();
         this.updateRastersOpacity();
       },
       handleKeyDown: function(){
@@ -706,6 +735,7 @@ export default {
     flex-direction: column;
 }
 .map-container{
+    -webkit-tap-highlight-color:  rgba(255, 255, 255, 0); 
     position: relative;
     width: 100%;
     height: 100%;

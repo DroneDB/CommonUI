@@ -19,7 +19,6 @@
 import TreeView from './TreeView.vue';
 import TreeNode from './TreeNode.vue';
 import ContextMenu from 'commonui/components/ContextMenu';
-import shell from 'commonui/dynamic/shell';
 import env from 'commonui/dynamic/env';
 import ddb from 'ddb';
 import icons from '../classes/icons';
@@ -53,6 +52,11 @@ export default {
         }
 
         contextMenu = contextMenu.concat([{
+                label: 'Open Item',
+                click: () => {
+                    if (this.lastSelectedNode !== null) this.$emit('openItem', this.lastSelectedNode.node);
+                }
+            },{
                 label: 'Properties',
                 click: () => {
                     if (this.lastSelectedNode !== null) {
@@ -158,7 +162,7 @@ export default {
                 this.$log.info("using static path");
                 return this.searchStaticPaths[path];
             }
-
+            
             try {
                 const entries = await ddb.fetchEntries(path, {
                     withHash: false,
@@ -194,7 +198,6 @@ export default {
                             isExpandable: ddb.entry.isDirectory(entry)
                         }
                     });
-                this.$log.info("Entries", clone(res));
                 return res;
             } catch (e) {
                 this.$log.error("Exception", clone(e));
@@ -249,8 +252,6 @@ export default {
 
         handleSelectionChanged: async function (selectedNodes) {
 
-            this.$log.info("FileBrowser.handleSelectionChanged(selectedNodes)", selectedNodes);
-
             // Keep track of nodes for "Open Item Location"
             this.lastSelectedNode = selectedNodes.length > 0 ? selectedNodes[selectedNodes.length - 1] : null;
             
@@ -284,13 +285,11 @@ export default {
         },
         handleOpen: function (component, sender) {
 
-            this.$log.info("FileBrowser.handleOpen(component, sender)", component, sender);
-
             const node = component.node;
 
             // Open file in default program
             if (!ddb.entry.isDirectory(node.entry)) {
-                shell.openItem(node.path);
+                this.$emit("openItem", node);
             } else {
                 // Select children of item
                 if (component.children && (sender === "dblclick" || sender === "explorer")) {
@@ -308,6 +307,8 @@ export default {
     .loading {
         margin-left: 2px;
     }
+    user-select: none;
+    -webkit-user-select: none;
 
     height: 100%;
     min-width: 100%;

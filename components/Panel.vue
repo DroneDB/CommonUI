@@ -1,9 +1,6 @@
 <template>
 <div class="panel">
     <slot />
-    <a @click="expandPanel" v-if="mobileCollapsed" class="ui button default icon expand mobile only large">
-        <i class="icon angle double right"></i>
-    </a>
 </div>
 </template>
 
@@ -30,15 +27,11 @@ export default {
       tabletAmount: {
           type: String,
           default: ""
-      },
-      mobileCollapsed: {
-          type: Boolean,
-          default: false
       }
   },
   
   data: function(){
-      const size = this.initialAmount();
+      const size = this.panelSize();
 
       let data = {
           panel0Style: {
@@ -54,8 +47,7 @@ export default {
               borderLeft: this.split === "vertical" ? "1px solid #030A03" : undefined,
           },
           resizing: false,
-          canResize: false,
-          collapsed: this.mobileCollapsed
+          canResize: false
       };
 
       return data;
@@ -75,23 +67,7 @@ export default {
       Mouse.off("mousemove", this.mouseMove);
   },
   methods: {
-      expandPanel: function(){
-          if (this.split == "horizontal") throw new Error("This is not supported yet! TODO");
-          this.collapsed = false;
-
-          const size = this.runningAmount();
-
-          this.panel0Style.width = size + '%';
-          this.panel1Style.width = (100 - size) + '%';
-          console.log("AH");
-      },
-
-      initialAmount: function(){
-            if (isMobile() && this.mobileCollapsed) return 0;
-            else return this.runningAmount();
-      }, 
-
-      runningAmount: function(){
+      panelSize: function(){
             if (isMobile() && this.mobileAmount) return this.mobileAmount;
             else if (isTablet() && this.tabletAmount) return this.tabletAmount;
             else return this.amount;
@@ -217,19 +193,5 @@ export default {
 
 <style scoped>
 .panel{
-    position: relative;
-    .button.expand{
-        position: absolute;
-        top: 50%;
-        top: calc(50% - 18px);
-        left: -2px;
-        background-image: linear-gradient(#fefefe, #f3f3f3);
-        padding-left: 8px;
-        padding-right: 6px;
-        padding-top: 16px;
-        padding-bottom: 16px;
-        z-index: 2;
-        box-shadow: 0 0 4px #030A03;
-    }
 }
 </style>

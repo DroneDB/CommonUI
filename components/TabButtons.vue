@@ -1,7 +1,8 @@
 <template>
     <div class="buttons">
-        <div v-for="t in tabs" class="tab-button" :class="{ active: activeTab === t.key, top: position === 'top' }" @click="setActiveTab(t)">
+        <div v-for="t in tabs" class="tab-button" :class="{ active: activeTab === t.key, top: position === 'top', canClose: !!t.canClose }" @click="setActiveTab(t)">
             <i class="icon" :class="{padded: !!t.hideLabel, [t.icon]: true}" :title="t.label" /><span v-if="!t.hideLabel" class="mobile hide"> {{ t.label }}</span>
+            <div @click.stop="closeTab(t)" v-if="!!t.canClose" class="close"><i class="icon close"></i></div>
         </div>
         <div v-if="buttonWidth === 'auto'" class="fill" :class="{ top: position === 'top', shadowed: lastTabSelected }">
         </div>
@@ -44,6 +45,10 @@ export default {
   mounted: function(){
   },
   methods: {
+      closeTab: function(tab){
+          this.$emit("closeTab", tab.key);
+      },
+
       setActiveTab: function(tab, event = true){
           this.activeTab = tab.key;
           if (event) this.$emit("click", tab);
@@ -56,6 +61,8 @@ export default {
 .buttons{
     margin-top: auto;
     display: flex;
+    user-select: none;
+    -webkit-user-select: none;
 
     .fill, .tab-button{
         padding: 8px;
@@ -118,6 +125,23 @@ export default {
 
         .icon.padded{
             padding-left: 3px;
+        }
+
+        &.canClose{
+            padding-right: 0;
+        }
+
+        .close{
+            display: inline-block;
+            margin-left: 2px;
+            padding: 0;
+            &:hover{
+                cursor: pointer;
+                color: #444444;
+            }
+            &:active{
+                color: #dddddd;
+            }
         }
     }
 
