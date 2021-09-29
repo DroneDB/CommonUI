@@ -2,13 +2,14 @@
 <div class="file-browser">
     <ContextMenu :items="contextMenu" />
     <div id="search-box">
-        <div id="cancel" :style="{visibility: filter != null && filter.length > 0 ? 'visible' : 'hidden'}" v-on:click="clearSearch()">
-            <i class="icon cancel"></i></div>
-        <input type="text" v-model="filter" v-on:keyup.enter="search()">
-        <div id="src" v-on:click="search()"><i class="icon search"></i></div>        
+        <div class="box">
+            <div id="cancel" :style="{visibility: filterRaw != null && filterRaw.length > 0 ? 'visible' : 'hidden'}" v-on:click="clearSearch()">
+                <i class="icon cancel"></i></div>
+            <input type="text" v-model="filterRaw" v-on:keyup.enter="search()">            
+        </div>
+        <div id="src" v-on:click="search()"><i class="icon search"></i></div> 
     </div>
     <TreeView :nodes="nodes" @selectionChanged="handleSelectionChanged" @opened="handleOpen" :getChildren="getChildren" />
-
     <div v-if="loading" class="loading">
         <i class="icon circle notch spin" />
     </div>
@@ -22,7 +23,7 @@ import ContextMenu from 'commonui/components/ContextMenu';
 import env from 'commonui/dynamic/env';
 import ddb from 'ddb';
 import icons from '../classes/icons';
-import { clone } from '../classes/utils';
+import { clone, debounce } from '../classes/utils';
 
 const { pathutils } = ddb;
 
@@ -72,9 +73,16 @@ export default {
             loading: true,
             lastSelectedNode: null,
             contextMenu,
+            filterRaw: null,
             filter: null,
-            searchStaticPaths: null
+            searchStaticPaths: null,
         };
+    },
+    watch: {
+      filterRaw: debounce(function (newVal) {
+        this.filter = newVal;
+        this.search();
+      }, 500)
     },
     mounted: async function () {
         await this.refreshNodes();
@@ -86,10 +94,17 @@ export default {
         clearSearch: async function() {
             this.filter = null;
             this.searchStaticPaths = null;
+            this.filterRaw = null;
             await this.refreshNodes();
         },
 
         search: async function() {
+
+            if (this.filter == null || this.filter.length == 0) {
+                await this.clearSearch();
+                return;
+            };
+
             this.$log.info("search");
             
             try {
@@ -316,31 +331,43 @@ export default {
 }
 
 #search-box {
-    
-    display: flex;
-    align-items: center;
-    padding-bottom: 8px;
+
+    padding: 8px;
     border-bottom: 1px solid black;
+    display: flex;
+
+    .box {
+        max-width: 200px;
+        position: relative;
+    }
 
     input {
         width: 100%;
-        text-align: center;
-        margin-top: 8px;
-        margin-left: 8px;
+        text-align: left;
     }
 
     #cancel {
         cursor: pointer;
-        margin-top: 8px;
-        visibility: hidden;
-        margin-left: 8px;
+        visibility: hidden; 
+        position: absolute;
+        right: 0px;
+        top: 0;
+        bottom: 0;
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+
+        .icon {
+            margin: 0;
+        }
     }
 
     #src {
         margin-left: 8px;
-        margin-top: 8px;
-        margin-right: 8px;    
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        margin-top: -2px;
     }
 }
 </style>
