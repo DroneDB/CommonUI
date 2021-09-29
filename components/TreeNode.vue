@@ -15,14 +15,22 @@
             <div class="text">{{ node.label }}</div>
         </div>
         <div class="children" v-show="expanded">
-            <TreeNode v-for="(node, index) in children" 
-                    :node="node"
-                    :key="'N,' + node.path" 
+            <div draggable
+                @dragstart="startDrag($event, node)"
+                @drop="onDrop($event, node)"
+                @dragover.prevent
+                @dragenter.prevent
+                v-for="(node, index) in children" 
+                :key="'N,' + node.path" >
+                <TreeNode 
+                    :node="node"                    
                     ref="nodes"
                     :getChildren="getChildren"
                     @selected="$emit('selected', $event, arguments[1])"
                     @opened="$emit('opened', $event, arguments[1])"
                      />
+            </div>
+            
         </div>
     </div>
 </template>
@@ -148,6 +156,42 @@ export default {
         },
         handleOpenCaret: async function(e){
             return this._handleOpen(e, "caret");
+        },
+
+        startDrag: (evt, item) => {
+            evt.dataTransfer.dropEffect = 'move';
+            evt.dataTransfer.effectAllowed = 'move';
+            
+            evt.dataTransfer.setData('item', JSON.stringify(clone(item)));
+        },
+
+        onDrop (evt, item) {
+            
+            debugger;
+
+            if (ddb.entry.isDirectory(item.entry)) {   
+                const destFolder = item.entry.path;
+                const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
+                
+                this.drop(sourceItem, destFolder);
+
+                /*this.selected.forEach(selItem => {
+                    if (selItem.entry.path == sourceItem.entry.path) return;
+                    this.drop(selItem, destFolder);
+                });*/
+            }
+        },
+
+        drop (sourceItem, destFolder) {
+            
+            console.log("drop", clone(sourceItem), console.log(destFolder));
+            if (destFolder == sourceItem.entry.path) {
+                return;
+            }
+
+            const destPath = pathutils.join(destFolder, pathutils.basename(sourceItem.entry.path));
+
+            this.$emit('moveItem', sourceItem, destPath);
         },
 
         sortChildren: function() {
