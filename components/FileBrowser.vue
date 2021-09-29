@@ -337,7 +337,7 @@ export default {
     display: flex;
 
     .box {
-        max-width: 200px;
+        width: 100%;
         position: relative;
     }
 
@@ -353,9 +353,10 @@ export default {
         right: 0px;
         top: 0;
         bottom: 0;
-        margin-right: 12px;
+        padding-right: 8px;
         display: flex;
         align-items: center;
+        margin-top: -4px;
 
         .icon {
             margin: 0;
@@ -367,7 +368,7 @@ export default {
         cursor: pointer;
         display: flex;
         align-items: center;
-        margin-top: -2px;
+        margin-top: -4px;
     }
 }
 </style>
