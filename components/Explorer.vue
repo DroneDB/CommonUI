@@ -2,9 +2,15 @@
 <div id="explorer-container" >
     <ContextMenu :items="contextMenu" />
     <Toolbar :tools="tools" v-if="tools" />
+    <div id="search-box">
+        <div id="cancel" v-if="filter != null && filter.length > 0" v-on:click="filter = null">
+            <i class="icon cancel"></i></div>
+        <input type="text" v-model="filter" v-on:click="clearSelection">
+        <div id="src"><i class="icon search"></i></div>        
+    </div>
     <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
     <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
-    <Thumbnail v-for="(f, idx) in files" 
+    <Thumbnail v-for="(f, idx) in filterFiles" 
                 :file="f" 
                 :key="f.path" 
                 :data-idx="idx" 
@@ -87,6 +93,7 @@ export default {
                 }]);
 
         return {
+            filter: null,
             loading: false,
             contextMenu
         };
@@ -94,6 +101,15 @@ export default {
     computed: {
         selectedFiles: function () {
             return this.files.filter(f => f.selected);
+        },
+        filterFiles: function() {
+            
+            if (this.filter == null || this.filter.length == 0) {
+                return this.files;
+            } else {
+                var lowerFilter = this.filter.toLowerCase();
+                return this.files.filter(i => i.entry.path.toLowerCase().includes(lowerFilter));
+            }  
         }
     },
     mounted: function () {
@@ -103,6 +119,7 @@ export default {
         this.lazyLoadThumbs();
     },
     methods: {
+
         onTabActivated: function(){
             this.$nextTick(() => {
                 this.lazyLoadThumbs();
@@ -119,7 +136,7 @@ export default {
             
             // Clicked an empty area
             if (e.target.id === 'explorer') {
-                this.deselectAll();
+                this.clearSelection();
             }
         },
         lazyLoadThumbs: function(){
@@ -146,13 +163,18 @@ export default {
             }, 250);
         },
         selectAll: function () {
-            this.files.forEach(f => f.selected = true);
+            this.filterFiles.forEach(f => f.selected = true);
         },
         deselectAll: function () {
+            this.filterFiles.forEach(f => f.selected = false);
+        },
+        clearSelection: function() {
             this.files.forEach(f => f.selected = false);
         },
         handleOpen: async function (thumb) {
             const file = thumb.file;
+
+            this.filter = null;
 
             if (entry.isDirectory(file.entry)) {
                 this.$root.$emit("folderOpened", pathutils.getTree(file.entry.path));
@@ -244,6 +266,28 @@ export default {
         overflow: hidden;
         border-bottom: 1px solid #030A03;
         border-top: 1px solid #bbbbbb;
+    }
+}
+
+#search-box {
+    position: absolute;
+    right: 10px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+
+    input {
+        width: 100%;
+        text-align: center;
+        width: 150px;
+    }
+
+    #cancel {
+        cursor: pointer;
+    }
+
+    #src {
+        margin-left: 5px;
     }
 }
 </style>
