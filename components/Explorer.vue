@@ -129,19 +129,33 @@ export default {
         startDrag: (evt, item) => {
             evt.dataTransfer.dropEffect = 'move';
             evt.dataTransfer.effectAllowed = 'move';
-
-            console.log(`startDrag('${item.entry.path}')`);
             
-            evt.dataTransfer.setData('path', item.entry.path);
+            evt.dataTransfer.setData('item', JSON.stringify(clone(item)));
         },
 
         onDrop (evt, item) {
+                            
+            if (entry.isDirectory(item.entry)) {   
+                const destFolder = item.entry.path;
+                const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
+                
+                this.drop(sourceItem, destFolder);
 
+                this.selectedFiles.forEach(selItem => {
+                    if (selItem.entry.path == sourceItem.entry.path) return;
+                    this.drop(selItem, destFolder);
+                });
+            }
+        },
+
+        drop (sourceItem, destFolder) {
             
-            const destPath = item.entry.path;
-            const path = evt.dataTransfer.getData('path');
+            if (destFolder == sourceItem.entry.path) {
+                return;
+            }
+            const destPath = pathutils.join(destFolder, pathutils.basename(sourceItem.entry.path));
 
-            console.log(`onDrop('${path}', '${destPath}')`);
+            this.$emit('moveItem', sourceItem, destPath);
         },
 
         onTabActivated: function(){
