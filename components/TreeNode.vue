@@ -17,7 +17,7 @@
         <div class="children" v-show="expanded">
             <TreeNode v-for="(node, index) in children" 
                     :node="node"
-                    :key="node.path" 
+                    :key="'N,' + node.path" 
                     ref="nodes"
                     :getChildren="getChildren"
                     @selected="$emit('selected', $event, arguments[1])"

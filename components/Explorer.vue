@@ -10,14 +10,20 @@
     </div>
     <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
     <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
-    <Thumbnail v-for="(f, idx) in filterFiles" 
-                :file="f" 
-                :key="f.path" 
-                :data-idx="idx" 
-                ref="thumbs" 
-                @clicked="handleSelection" 
-                @open="handleOpen"
-                :lazyLoad="true" />
+    <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path"  draggable
+                @dragstart="startDrag($event, f)"
+                @drop="onDrop($event, f)"
+                @dragover.prevent
+                @dragenter.prevent>
+        <Thumbnail 
+        :file="f"         
+        :data-idx="idx" 
+        ref="thumbs" 
+        @clicked="handleSelection" 
+        @open="handleOpen"
+        :lazyLoad="true"                
+            />    
+    </div>    
     </div>    
 </div>
 </template>
@@ -109,7 +115,7 @@ export default {
             } else {
                 var lowerFilter = this.filter.toLowerCase();
                 return this.files.filter(i => i.entry.path.toLowerCase().includes(lowerFilter));
-            }  
+            }
         }
     },
     mounted: function () {
@@ -119,6 +125,24 @@ export default {
         this.lazyLoadThumbs();
     },
     methods: {
+
+        startDrag: (evt, item) => {
+            evt.dataTransfer.dropEffect = 'move';
+            evt.dataTransfer.effectAllowed = 'move';
+
+            console.log(`startDrag('${item.entry.path}')`);
+            
+            evt.dataTransfer.setData('path', item.entry.path);
+        },
+
+        onDrop (evt, item) {
+
+            
+            const destPath = item.entry.path;
+            const path = evt.dataTransfer.getData('path');
+
+            console.log(`onDrop('${path}', '${destPath}')`);
+        },
 
         onTabActivated: function(){
             this.$nextTick(() => {
