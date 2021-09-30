@@ -1,6 +1,10 @@
 <template>
     <div class="tree-node">
-        <div class="entry" 
+        <div class="entry" draggable
+                @dragstart="startDrag($event, node)"
+                @drop="onDrop($event, node)"
+                @dragover.prevent
+                @dragenter.prevent
             @click="onClick" 
             @dblclick="handleOpenDblClick" 
             @contextmenu="onRightClick"
@@ -14,23 +18,15 @@
             <i class="icon" :class="node.icon" />
             <div class="text">{{ node.label }}</div>
         </div>
-        <div class="children" v-show="expanded">
-            <div draggable
-                @dragstart="startDrag($event, node)"
-                @drop="onDrop($event, node)"
-                @dragover.prevent
-                @dragenter.prevent
-                v-for="(node, index) in children" 
-                :key="'N,' + node.path" >
-                <TreeNode 
-                    :node="node"                    
-                    ref="nodes"
-                    :getChildren="getChildren"
-                    @selected="$emit('selected', $event, arguments[1])"
-                    @opened="$emit('opened', $event, arguments[1])"
-                     />
-            </div>
-            
+        <div class="children" v-show="expanded">                 
+            <TreeNode v-for="(node, index) in children" 
+                :key="'N,' + node.path"
+                :node="node"                    
+                ref="nodes"
+                :getChildren="getChildren" 
+                @selected="$emit('selected', $event, arguments[1])"
+                @opened="$emit('opened', $event, arguments[1])"
+                    />                        
         </div>
     </div>
 </template>
@@ -159,39 +155,20 @@ export default {
         },
 
         startDrag: (evt, item) => {
+            evt.stopPropagation();
             evt.dataTransfer.dropEffect = 'move';
             evt.dataTransfer.effectAllowed = 'move';
-            
-            evt.dataTransfer.setData('item', JSON.stringify(clone(item)));
+            var data = JSON.stringify(clone(item));
+            evt.dataTransfer.setData('item', data);
+
+            console.log("drag", item.entry.path);
         },
 
-        onDrop (evt, item) {
-            
-            debugger;
+        onDrop (evt, item) {              
+            const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
+            console.log("drop", sourceItem.entry.path, item.entry.path);
 
-            if (ddb.entry.isDirectory(item.entry)) {   
-                const destFolder = item.entry.path;
-                const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
-                
-                this.drop(sourceItem, destFolder);
-
-                /*this.selected.forEach(selItem => {
-                    if (selItem.entry.path == sourceItem.entry.path) return;
-                    this.drop(selItem, destFolder);
-                });*/
-            }
-        },
-
-        drop (sourceItem, destFolder) {
-            
-            console.log("drop", clone(sourceItem), console.log(destFolder));
-            if (destFolder == sourceItem.entry.path) {
-                return;
-            }
-
-            const destPath = pathutils.join(destFolder, pathutils.basename(sourceItem.entry.path));
-
-            this.$emit('moveItem', sourceItem, destPath);
+            this.$root.$emit('moveItem', sourceItem, item);
         },
 
         sortChildren: function() {
