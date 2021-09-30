@@ -139,6 +139,8 @@ export default {
 
         this.$root.$on('moveItemInit', (destItem) => {
             if (this.selected) {
+                this.selected = false;
+                this.$log.info(`node '${this.node.entry.path}' calling moveItem to '${destItem.entry.path}'`);
                 this.$root.$emit('moveItem', this.node, destItem);
             }
         });
@@ -161,19 +163,21 @@ export default {
         },
 
         startDrag (evt, item) {
+
             evt.stopPropagation();
+            
             evt.dataTransfer.dropEffect = 'move';
             evt.dataTransfer.effectAllowed = 'move';
             var data = JSON.stringify(clone(item));
             evt.dataTransfer.setData('item', data);
 
             this.selected = true;
-            console.log("drag", item.entry.path);
+            this.$log.info(`drag start '${item.entry.path}'`);
         },
 
         onDrop (evt, item) {              
             const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
-            console.log("drop", sourceItem.entry.path, item.entry.path);
+            this.$log.info(`dropping '${sourceItem.entry.path}' onto '${item.entry.path}'`);
             
             this.$root.$emit('moveItemInit', item);
         },
