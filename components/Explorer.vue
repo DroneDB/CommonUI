@@ -151,9 +151,7 @@ export default {
         drop (sourceItem, destFolder) {
             
             if (entry.isDirectory(sourceItem.entry) && destFolder.startsWith(sourceItem.entry.path)) {
-                
-                debugger;
-                console.log("Cannot copy a folder on itself or one of its descendants");
+                this.$log.info("Cannot copy a folder on itself or one of its descendants");
                 return;
             }
             
