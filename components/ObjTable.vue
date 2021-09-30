@@ -13,13 +13,10 @@
                             {{beautify(key)}}<span v-if="Array.isArray(val)">&nbsp;[{{val.length}}]</span>
                         </td>
                         <td>
-                            <div v-if="key=='projection'" class="wrap">
-                                {{wrapIt(val)}}
-                            </div>
-                            <div v-else-if="key=='captureTime'">
+                            <div v-if="key=='captureTime'">
                                 {{new Date(val)}}
                             </div>
-                            <div v-else-if="typeof val === 'string'">
+                            <div v-else-if="typeof val === 'string'" class="wrap">
                                 {{val}}
                             </div>
                             <ObjTable v-else :obj="val"></ObjTable>
@@ -54,9 +51,6 @@ export default {
         beautify(name) {
             if (typeof name !== 'string') return name;
             return name[0].toUpperCase() + name.substring(1).replace(/([a-z])([A-Z0-9])/g, '$1 $2');
-        },
-        wrapIt(str) {
-            return str.replace(/\,/g, ', ');
         }
     }
 }
