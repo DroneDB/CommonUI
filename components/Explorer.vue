@@ -256,15 +256,17 @@ export default {
             }
 
             let $n = low.$el;
-            while ($n != high.$el) {
+            while ($n != high.$el && $n !== null) {
                 const f = thumbs[parseInt($n.getAttribute('data-idx'))].file;
                 f.selected = true;
-                $n = $n.nextSibling;
+                $n = $n.parentElement.nextSibling.children[0];
             }
 
-            // Select last
-            const f = thumbs[parseInt($n.getAttribute('data-idx'))].file;
-            f.selected = true;
+            if ($n !== null) {
+                // Select last
+                const f = thumbs[parseInt($n.getAttribute('data-idx'))].file;
+                f.selected = true;
+            }
         },
 
         scrollTo: function(file){
