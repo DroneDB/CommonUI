@@ -150,9 +150,13 @@ export default {
 
         drop (sourceItem, destFolder) {
             
-            if (destFolder == sourceItem.entry.path) {
+            if (entry.isDirectory(sourceItem.entry) && destFolder.startsWith(sourceItem.entry.path)) {
+                
+                debugger;
+                console.log("Cannot copy a folder on itself or one of its descendants");
                 return;
             }
+            
             const destPath = pathutils.join(destFolder, pathutils.basename(sourceItem.entry.path));
 
             this.$emit('moveItem', sourceItem, destPath);
