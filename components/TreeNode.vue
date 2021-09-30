@@ -40,25 +40,25 @@ const { pathutils } = ddb;
 import icons from '../classes/icons';
 
 export default {
-  props: {
-      node: {
-          type: Object
-      },
-      getChildren: {
-        type: Function,
-        required: true
-    }
-  },
-  components: { TreeNode: () => import('./TreeNode.vue') },
-  data: function(){
-      return {
-          children: [],
-          loading: false,
-          loadedChildren: false,
-          selected: false,
-          expanded: false,
-      }
-  },
+    props: {
+        node: {
+            type: Object
+        },
+        getChildren: {
+            type: Function,
+            required: true
+        }
+    },
+    components: { TreeNode: () => import('./TreeNode.vue') },
+    data: function(){
+        return {
+            children: [],
+            loading: false,
+            loadedChildren: false,
+            selected: false,
+            expanded: false,
+        }
+    },
     computed: {
         isExpandable: function() {
             return ddb.entry.isDirectory(this.node.entry);
@@ -136,6 +136,12 @@ export default {
             this.sortChildren();
 
         });
+
+        this.$root.$on('moveItemInit', (destItem) => {
+            if (this.selected) {
+                this.$root.$emit('moveItem', this.node, destItem);
+            }
+        });
        
     },
     methods: {
@@ -154,21 +160,22 @@ export default {
             return this._handleOpen(e, "caret");
         },
 
-        startDrag: (evt, item) => {
+        startDrag (evt, item) {
             evt.stopPropagation();
             evt.dataTransfer.dropEffect = 'move';
             evt.dataTransfer.effectAllowed = 'move';
             var data = JSON.stringify(clone(item));
             evt.dataTransfer.setData('item', data);
 
+            this.selected = true;
             console.log("drag", item.entry.path);
         },
 
         onDrop (evt, item) {              
             const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
             console.log("drop", sourceItem.entry.path, item.entry.path);
-
-            this.$root.$emit('moveItem', sourceItem, item);
+            
+            this.$root.$emit('moveItemInit', item);
         },
 
         sortChildren: function() {
