@@ -108,6 +108,7 @@ export default {
     text-align: center;
     word-break: break-all;
     border-radius: 4px;
+    transition: 0.25s background-color ease;
     &:hover{
         background: #eee;
         cursor: pointer;

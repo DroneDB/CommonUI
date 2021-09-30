@@ -10,14 +10,20 @@
     </div>
     <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
     <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
-    <Thumbnail v-for="(f, idx) in filterFiles" 
-                :file="f" 
-                :key="f.path" 
-                :data-idx="idx" 
-                ref="thumbs" 
-                @clicked="handleSelection" 
-                @open="handleOpen"
-                :lazyLoad="true" />
+    <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path"  draggable
+                @dragstart="startDrag($event, f)"
+                @drop="onDrop($event, f)"
+                @dragover.prevent
+                @dragenter.prevent>
+        <Thumbnail 
+        :file="f"         
+        :data-idx="idx" 
+        ref="thumbs" 
+        @clicked="handleSelection" 
+        @open="handleOpen"
+        :lazyLoad="true"                
+            />    
+    </div>    
     </div>    
 </div>
 </template>
@@ -109,7 +115,7 @@ export default {
             } else {
                 var lowerFilter = this.filter.toLowerCase();
                 return this.files.filter(i => i.entry.path.toLowerCase().includes(lowerFilter));
-            }  
+            }
         }
     },
     mounted: function () {
@@ -119,6 +125,40 @@ export default {
         this.lazyLoadThumbs();
     },
     methods: {
+
+        startDrag: (evt, item) => {
+            evt.dataTransfer.dropEffect = 'move';
+            evt.dataTransfer.effectAllowed = 'move';
+            
+            evt.dataTransfer.setData('item', JSON.stringify(clone(item)));
+        },
+
+        onDrop (evt, item) {
+                            
+            if (entry.isDirectory(item.entry)) {   
+                const destFolder = item.entry.path;
+                const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
+                
+                this.drop(sourceItem, destFolder);
+
+                this.selectedFiles.forEach(selItem => {
+                    if (selItem.entry.path == sourceItem.entry.path) return;
+                    this.drop(selItem, destFolder);
+                });
+            }
+        },
+
+        drop (sourceItem, destFolder) {
+            
+            if (entry.isDirectory(sourceItem.entry) && destFolder.startsWith(sourceItem.entry.path)) {
+                this.$log.info("Cannot copy a folder on itself or one of its descendants");
+                return;
+            }
+            
+            const destPath = pathutils.join(destFolder, pathutils.basename(sourceItem.entry.path));
+
+            this.$emit('moveItem', sourceItem, destPath);
+        },
 
         onTabActivated: function(){
             this.$nextTick(() => {
@@ -216,15 +256,17 @@ export default {
             }
 
             let $n = low.$el;
-            while ($n != high.$el) {
+            while ($n != high.$el && $n !== null) {
                 const f = thumbs[parseInt($n.getAttribute('data-idx'))].file;
                 f.selected = true;
-                $n = $n.nextSibling;
+                $n = $n.parentElement.nextSibling.children[0];
             }
 
-            // Select last
-            const f = thumbs[parseInt($n.getAttribute('data-idx'))].file;
-            f.selected = true;
+            if ($n !== null) {
+                // Select last
+                const f = thumbs[parseInt($n.getAttribute('data-idx'))].file;
+                f.selected = true;
+            }
         },
 
         scrollTo: function(file){

@@ -1,6 +1,10 @@
 <template>
     <div class="tree-node">
-        <div class="entry" 
+        <div class="entry" draggable
+                @dragstart="startDrag($event, node)"
+                @drop="onDrop($event, node)"
+                @dragover.prevent
+                @dragenter.prevent
             @click="onClick" 
             @dblclick="handleOpenDblClick" 
             @contextmenu="onRightClick"
@@ -14,15 +18,15 @@
             <i class="icon" :class="node.icon" />
             <div class="text">{{ node.label }}</div>
         </div>
-        <div class="children" v-show="expanded">
+        <div class="children" v-show="expanded">                 
             <TreeNode v-for="(node, index) in children" 
-                    :node="node"
-                    :key="node.path" 
-                    ref="nodes"
-                    :getChildren="getChildren"
-                    @selected="$emit('selected', $event, arguments[1])"
-                    @opened="$emit('opened', $event, arguments[1])"
-                     />
+                :key="'N,' + node.path"
+                :node="node"                    
+                ref="nodes"
+                :getChildren="getChildren" 
+                @selected="$emit('selected', $event, arguments[1])"
+                @opened="$emit('opened', $event, arguments[1])"
+                    />                        
         </div>
     </div>
 </template>
@@ -36,25 +40,25 @@ const { pathutils } = ddb;
 import icons from '../classes/icons';
 
 export default {
-  props: {
-      node: {
-          type: Object
-      },
-      getChildren: {
-        type: Function,
-        required: true
-    }
-  },
-  components: { TreeNode: () => import('./TreeNode.vue') },
-  data: function(){
-      return {
-          children: [],
-          loading: false,
-          loadedChildren: false,
-          selected: false,
-          expanded: false,
-      }
-  },
+    props: {
+        node: {
+            type: Object
+        },
+        getChildren: {
+            type: Function,
+            required: true
+        }
+    },
+    components: { TreeNode: () => import('./TreeNode.vue') },
+    data: function(){
+        return {
+            children: [],
+            loading: false,
+            loadedChildren: false,
+            selected: false,
+            expanded: false,
+        }
+    },
     computed: {
         isExpandable: function() {
             return ddb.entry.isDirectory(this.node.entry);
@@ -132,6 +136,14 @@ export default {
             this.sortChildren();
 
         });
+
+        this.$root.$on('moveItemInit', (destItem) => {
+            if (this.selected) {
+                this.selected = false;
+                this.$log.info(`node '${this.node.entry.path}' calling moveItem to '${destItem.entry.path}'`);
+                this.$root.$emit('moveItem', this.node, destItem);
+            }
+        });
        
     },
     methods: {
@@ -148,6 +160,26 @@ export default {
         },
         handleOpenCaret: async function(e){
             return this._handleOpen(e, "caret");
+        },
+
+        startDrag (evt, item) {
+
+            evt.stopPropagation();
+            
+            evt.dataTransfer.dropEffect = 'move';
+            evt.dataTransfer.effectAllowed = 'move';
+            var data = JSON.stringify(clone(item));
+            evt.dataTransfer.setData('item', data);
+
+            this.selected = true;
+            this.$log.info(`drag start '${item.entry.path}'`);
+        },
+
+        onDrop (evt, item) {              
+            const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
+            this.$log.info(`dropping '${sourceItem.entry.path}' onto '${item.entry.path}'`);
+            
+            this.$root.$emit('moveItemInit', item);
         },
 
         sortChildren: function() {
