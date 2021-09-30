@@ -1,10 +1,10 @@
 <template>
     <div>
-        <div v-if="Array.isArray(obj)" style="display: flex; align-items: center; flex-wrap: wrap">
-            <div v-for="(item, index) in obj" style="margin: 5px; padding: 5px">
+        <ul v-if="Array.isArray(obj)">
+            <li v-for="(item, index) in obj">
                 <ObjTable :obj="item"></ObjTable>
-            </div>
-        </div>
+            </li>
+        </ul>
         <div v-else-if="typeof obj === 'object'">
             <table class="ui compact celled definition unstackable table">
                 <tbody>
@@ -24,12 +24,15 @@
                             </div>
                             <ObjTable v-else :obj="val"></ObjTable>
                         </td>
-                    </tr>            
+                    </tr>
                 </tbody>
-            </table>             
-        </div>  
+            </table>
+        </div>
+        <div v-else-if="typeof obj === 'number'">
+            {{obj.toLocaleString()}}
+        </div>
         <div v-else>
-            {{obj}}                        
+            {{obj}}
         </div>
     </div>
 </template>
@@ -60,8 +63,13 @@ export default {
 </script>
 
 <style scoped>
+ul{
+    margin: 0;
+    padding-left: 1rem;
+}
 .wrap { 
    word-wrap: break-word;
+   word-break: break-all;
    white-space: normal;
 }
 </style>
