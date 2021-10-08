@@ -8,7 +8,7 @@
         @dblclick="onDblClick">
         <div class="container" :class="{bordered: thumbnail !== null}"
             :style="sizeStyle">
-            <img v-if="thumbnail !== null && !loading" :src="thumbnail" ref="image" />
+            <img :class="{hide: thumbnail !== null && loading}" @load="imageLoaded" :src="thumbnail" />
             <i class="icon icon-file " :class="icon" :style="iconStyle" v-if="icon && !loading" />
             <i class="icon circle notch spin loading" v-if="loading || (thumbnail === null && icon === null)" />
         </div>
@@ -62,6 +62,9 @@ export default {
       if (!this.lazyLoad) await this.loadThumbnail();
   },
   methods: {
+      imageLoaded: function(){
+          this.loading = false;
+      },
       getBoundingRect: function(){
           return this.$el.getBoundingClientRect();
       },
@@ -73,6 +76,7 @@ export default {
 
         try{
             if (thumbs.supportedForType(this.file.entry.type)){
+                this.loading = true;
                 this.thumbnail = await thumbs.fetch(this.file.path);
             }else{
                 this.icon = this.file.icon;
@@ -123,6 +127,7 @@ export default {
         display: flex;
         align-items: flex-end;
         justify-content: center;
+        position: relative;
         .bordered{
             box-shadow: 2px 2px 6px -2px #030A03;
         }
@@ -131,6 +136,9 @@ export default {
             padding-left: 8px;
             max-width: 100%;
             max-height: 100%;
+            &.hide{
+                visibility: hidden;
+            }
         }
         margin-bottom: 4px;
         i.icon-file{
@@ -144,8 +152,8 @@ export default {
     }
 
     i.loading{
-        position: relative;
-        top: -40%;
+        position: absolute;
+        top: 50%;
     }
 }
 </style>
