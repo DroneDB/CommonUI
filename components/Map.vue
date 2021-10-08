@@ -248,13 +248,6 @@ export default {
                 })
             }),
 
-            pointcloud: new Style({
-                stroke: new Stroke({
-                    color: 'rgba(253, 226, 147, 1)',
-                    width: 6
-                })
-            }),
-
             invisible: new Style({
                 fill: new Fill({
                     color: 'rgba(0, 0, 0, 0)'
@@ -332,12 +325,6 @@ export default {
             this.markerLayer
         ]));
 
-        this.pointCloudFeatures = new VectorSource();
-        this.pointCloudLayer = new VectorLayer({
-            source: this.pointCloudFeatures,
-            style: this.styles.pointcloud
-        });
-
         this.dragBox = new DragBox({minArea: 0});
         this.dragBox.on('boxend', () => {
             let extent = this.dragBox.getGeometry().getExtent();
@@ -387,7 +374,6 @@ export default {
             layers: [
                 this.basemapLayer,
                 this.rasterLayer,
-                this.pointCloudLayer,
                 this.footprintRastersLayer,
                 this.extentLayer,
                 this.outlineLayer,
@@ -455,7 +441,10 @@ export default {
             this.topLayers.setVisible(true);
             
             // Add selected
+            let stop = false;
             this.map.forEachFeatureAtPixel(e.pixel, feat => {
+                if (stop) return;
+
                 if (!feat.outline){
                     let outline = null;
 
@@ -484,7 +473,7 @@ export default {
                                 tileSize: 256,
                                 transition: 200,
                                 minZoom: 14,
-                                maxZoom: 23
+                                maxZoom: 22
                                 // TODO: get min/max zoom somehow?
                             })
                         });
@@ -502,6 +491,8 @@ export default {
                     feat.outline = outline;
 
                     this.topLayers.setVisible(false);
+
+                    stop = true;
                 }
             }, { 
                 layerFilter: layer => {
@@ -572,9 +563,6 @@ export default {
           this.rasterLayer.getLayers().forEach(layer => {
               extendExtent(ext, layer.getExtent());
           });
-          if (this.pointCloudFeatures.getFeatures().length){
-            extendExtent(ext, this.pointCloudFeatures.getExtent());
-          }
           return ext;
       },
       clearLayerGroup: function(layerGroup){
@@ -591,10 +579,10 @@ export default {
         if (!this.loaded) return;
 
         this.fileFeatures.clear();
+        this.extentsFeatures.clear();
         this.outlineFeatures.clear();
         this.flightPathFeatures.clear();
         this.markerFeatures.clear();
-        this.pointCloudFeatures.clear();
         this.clearLayerGroup(this.rasterLayer);
 
         const features = [];
@@ -623,14 +611,14 @@ export default {
                         });
                     }
                 }
-            }else if (f.entry.type === ddb.entry.type.GEORASTER){
+            }else if (f.entry.type === ddb.entry.type.GEORASTER || f.entry.type === ddb.entry.type.POINTCLOUD){
                 const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
                 const tileLayer = new TileLayer({
-                    extent, 
+                    extent,
                     source: new HybridXYZ({
                         url: f.path,
                         tileSize: 256,
-                        transition: 0, // TODO: why transitions don't work?
+                        transition: 200,
                         minZoom: 14,
                         maxZoom: 22
                         // TODO: get min/max zoom from file
@@ -644,12 +632,6 @@ export default {
                 const extentFeat = new Feature(fromExtent(extent));
                 extentFeat.file = f;
                 this.extentsFeatures.addFeature(extentFeat);
-            }else if (f.entry.type === ddb.entry.type.POINTCLOUD){
-                const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
-                // TODO: add tile layer
-                const extentFeat = new Feature(fromExtent(extent));
-                extentFeat.file = f;
-                this.pointCloudFeatures.addFeature(extentFeat);
             }
         });
 
