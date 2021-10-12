@@ -611,7 +611,7 @@ export default {
                         });
                     }
                 }
-            }else if (f.entry.type === ddb.entry.type.GEORASTER || f.entry.type === ddb.entry.type.POINTCLOUD){
+            }else if (f.entry.polygon_geom && (f.entry.type === ddb.entry.type.GEORASTER || f.entry.type === ddb.entry.type.POINTCLOUD)){
                 const extent = transformExtent(bbox(f.entry.polygon_geom), 'EPSG:4326', 'EPSG:3857');
                 const tileLayer = new TileLayer({
                     extent,
