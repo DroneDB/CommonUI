@@ -8,8 +8,8 @@
         @dblclick="onDblClick">
         <div class="container" :class="{bordered: thumbnail !== null}"
             :style="sizeStyle">
-            <img :class="{hide: thumbnail !== null && loading}" @load="imageLoaded" :src="thumbnail" />
-            <i class="icon icon-file " :class="icon" :style="iconStyle" v-if="icon && !loading" />
+            <img v-if="!icon" :class="{hide: thumbnail !== null && loading}" @load="imageLoaded" :src="thumbnail" />
+            <i  v-if="icon && !loading"class="icon icon-file " :class="icon" :style="iconStyle" />
             <i class="icon circle notch spin loading" v-if="loading || (thumbnail === null && icon === null)" />
         </div>
         {{filename}}
