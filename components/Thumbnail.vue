@@ -8,8 +8,8 @@
         @dblclick="onDblClick">
         <div class="container" :class="{bordered: thumbnail !== null}"
             :style="sizeStyle">
-            <img v-if="!icon" :class="{hide: thumbnail !== null && loading}" @load="imageLoaded" :src="thumbnail" />
-            <i  v-if="icon && !loading"class="icon icon-file " :class="icon" :style="iconStyle" />
+            <img v-if="!icon" :class="{hide: thumbnail !== null && loading}" @load="imageLoaded" @error="handleImageError" :src="thumbnail" />
+            <i v-if="icon && !loading" class="icon icon-file " :class="icon" :style="iconStyle" />
             <i class="icon circle notch spin loading" v-if="loading || (thumbnail === null && icon === null)" />
         </div>
         {{filename}}
@@ -68,6 +68,15 @@ export default {
       getBoundingRect: function(){
           return this.$el.getBoundingClientRect();
       },
+      handleImageError: function(e){
+          this.showError(new Error("Cannot load thumbnail"));
+      },
+      showError: function(e){
+        console.warn(e);
+        this.error = e.message;
+        this.icon = "exclamation triangle";
+        this.loading = false;
+      },
       loadThumbnail: async function(){
         if (this.loadingThumbnail) return; // Already loading
         if (this.thumbnail && !this.error) return; // Already loaded
@@ -83,10 +92,8 @@ export default {
             }
             this.loadingThumbnail = false;
         }catch(e){
-            console.warn(e);
-            this.error = e;
-            this.icon = "exclamation triangle";
             this.loadingThumbnail = false;
+            this.showError(e);
         }
       },
       onClick: function(e){
