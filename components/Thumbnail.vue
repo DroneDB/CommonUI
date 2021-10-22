@@ -80,6 +80,7 @@ export default {
       loadThumbnail: async function(){
         if (this.loadingThumbnail) return; // Already loading
         if (this.thumbnail && !this.error) return; // Already loaded
+        if (this.error) return; // TODO: is there a way to retry? Need to re-add the <img> tag to the DOM and retrigger load
 
         this.loadingThumbnail = true;
 
