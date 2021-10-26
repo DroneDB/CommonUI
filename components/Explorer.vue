@@ -8,7 +8,12 @@
         <input type="text" v-model="filter" v-on:click="clearSelection">
         <div id="src"><i class="icon search"></i></div>        
     </div>
-    <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
+    <div v-if="currentPath">
+        <div class="ui basic buttons" style="margin-top: 10px; margin-left: 10px">
+            <div v-for="b in breadcrumbs" :key="'B,' + b.name" class="compact small ui basic button">{{b.name}}</div>
+        </div>
+        <div class="ui divider"></div>
+    </div>
     <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path"  draggable
                 @dragstart="startDrag($event, f)"
@@ -104,6 +109,11 @@ export default {
             contextMenu
         };
     },
+    watch: { 
+      	currentPath: function(newVal, oldVal) { // watch it
+          console.log('Prop changed: ', newVal, ' | was: ', oldVal)
+        }
+    },
     computed: {
         selectedFiles: function () {
             return this.files.filter(f => f.selected);
@@ -116,6 +126,25 @@ export default {
                 var lowerFilter = this.filter.toLowerCase();
                 return this.files.filter(i => i.entry.path.toLowerCase().includes(lowerFilter));
             }
+        },
+        breadcrumbs: function() {
+            if (this.currentPath == null || this.currentPath.length == 0) return null;
+
+            var folders = this.currentPath.split('/');
+            var cur = "";
+            var bc = [];
+
+            for(var el of folders) {
+                
+                cur += '/' + el;
+
+                bc.push({
+                    path: cur.substring(1),
+                    name: el
+                });
+            }
+
+            return bc;
         }
     },
     mounted: function () {
