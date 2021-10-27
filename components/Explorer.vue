@@ -9,8 +9,12 @@
         <div id="src"><i class="icon search"></i></div>        
     </div>
     <div v-if="currentPath">
-        <div class="ui basic buttons" style="margin-top: 10px; margin-left: 10px">
-            <div v-for="b in breadcrumbs" :key="'B,' + b.name" class="compact small ui basic button">{{b.name}}</div>
+        <div class="ui large breadcrumb" style="margin-top: 1rem; margin-left: 1rem">      
+            <span v-for="(b, idx) in breadcrumbs" :key="'B,' + b.name">
+                <a v-if="idx != breadcrumbs.length - 1" class="section" v-on:click="goTo(b)">{{b.name}}</a>
+                <div v-if="idx == breadcrumbs.length - 1" class="section active">{{b.name}}</div>
+                <span v-if="idx != breadcrumbs.length - 1" class="divider">/</span>
+            </span>            
         </div>
         <div class="ui divider"></div>
     </div>
@@ -154,6 +158,11 @@ export default {
         this.lazyLoadThumbs();
     },
     methods: {
+
+        goTo: function(itm) {
+            this.$root.$emit("folderOpened", pathutils.getTree(itm.path));
+            //console.log(path);
+        },
 
         startDrag: (evt, item) => {
             evt.dataTransfer.dropEffect = 'move';
