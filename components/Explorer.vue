@@ -113,11 +113,6 @@ export default {
             contextMenu
         };
     },
-    watch: { 
-      	currentPath: function(newVal, oldVal) { // watch it
-          console.log('Prop changed: ', newVal, ' | was: ', oldVal)
-        }
-    },
     computed: {
         selectedFiles: function () {
             return this.files.filter(f => f.selected);
