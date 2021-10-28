@@ -8,7 +8,16 @@
         <input type="text" v-model="filter" v-on:click="clearSelection">
         <div id="src"><i class="icon search"></i></div>        
     </div>
-    <div v-if="currentPath" class="breadcrumbs" >{{ currentPath }}</div>
+    <div v-if="currentPath">
+        <div class="ui large breadcrumb" style="margin-top: 1rem; margin-left: 1rem">      
+            <span v-for="(b, idx) in breadcrumbs" :key="'B,' + b.name">
+                <a v-if="idx != breadcrumbs.length - 1" class="section" v-on:click="goTo(b)">{{b.name}}</a>
+                <div v-if="idx == breadcrumbs.length - 1" class="section active">{{b.name}}</div>
+                <span v-if="idx != breadcrumbs.length - 1" class="divider">/</span>
+            </span>            
+        </div>
+        <div class="ui divider"></div>
+    </div>
     <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
     <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path"  draggable
                 @dragstart="startDrag($event, f)"
@@ -116,6 +125,25 @@ export default {
                 var lowerFilter = this.filter.toLowerCase();
                 return this.files.filter(i => i.entry.path.toLowerCase().includes(lowerFilter));
             }
+        },
+        breadcrumbs: function() {
+            if (this.currentPath == null || this.currentPath.length == 0) return null;
+
+            var folders = this.currentPath.split('/');
+            var cur = "";
+            var bc = [];
+
+            for(var el of folders) {
+                
+                cur += '/' + el;
+
+                bc.push({
+                    path: cur.substring(1),
+                    name: el
+                });
+            }
+
+            return bc;
         }
     },
     mounted: function () {
@@ -125,6 +153,11 @@ export default {
         this.lazyLoadThumbs();
     },
     methods: {
+
+        goTo: function(itm) {
+            this.$root.$emit("folderOpened", pathutils.getTree(itm.path));
+            //console.log(path);
+        },
 
         startDrag: (evt, item) => {
             evt.dataTransfer.dropEffect = 'move';
