@@ -107,28 +107,6 @@ export default {
                     }
                 },
                 {
-                    label: "Delete",
-                    icon: 'trash alternate outline',
-                    isVisible: () => { return this.selectedFiles.length > 0; },
-                    accelerator: "CmdOrCtrl+D",
-                    click: () => {
-                        this.$emit("deleteFile");
-                    }
-                },
-                {
-                    label: "Move",
-                    icon: 'copy outline',
-                    isVisible: () => { return this.selectedFiles.length == 1; },
-                    accelerator: "CmdOrCtrl+M",
-                    click: () => {
-                        this.$emit("moveFile");
-                    }
-                },
-                {
-                    isVisible: () => { return this.selectedFiles.length > 0; },
-                    type: 'separator'
-                },
-                {
                     label: "Properties",
                     isVisible: () => { return this.selectedFiles.length > 0; },
                     icon: 'info circle',
@@ -136,7 +114,30 @@ export default {
                     click: () => {
                         this.$emit("openProperties");
                     }
-                }]);
+                },
+                {
+                    label: "Rename",
+                    icon: 'pencil alternate',
+                    isVisible: () => { return this.selectedFiles.length == 1; },
+                    accelerator: "CmdOrCtrl+M",
+                    click: () => {
+                        this.$emit("moveSelectedItems");
+                    }
+                },
+                {
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    type: 'separator'
+                },
+                {
+                    label: "Delete",
+                    icon: 'trash alternate outline',
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    accelerator: "CmdOrCtrl+D",
+                    click: () => {
+                        this.$emit("deleteSelecteditems");
+                    }
+                }
+                ]);
 
         return {
             filter: null,
