@@ -63,6 +63,8 @@ export default {
         if (env.isElectron()){
             contextMenu = contextMenu.concat([{
                         label: "Open Item Location",
+                        icon: 'open folder outline', 
+                        isVisible: () => { return this.selectedFiles.length > 0; },
                         click: () => {
                             if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
                         },
@@ -71,7 +73,9 @@ export default {
                         type: 'separator'
                     },{
                         label: "Share",
+                        icon: 'share alternate',
                         accelerator: "CmdOrCtrl+S",
+                        isVisible: () => { return this.selectedFiles.length > 0; },
                         click: () => {
                             if (this.selectedFiles.length > 0) dispatchEvent(new Event("btnShare_Click"));
                         }
@@ -82,6 +86,8 @@ export default {
 
         contextMenu = contextMenu.concat([{
                     label: 'Open Item',
+                    icon: 'share',
+                    isVisible: () => { return this.selectedFiles.length > 0; },
                     click: () => {
                         this.selectedFiles.forEach(f => {
                             this.$emit('openItem', f);
@@ -89,6 +95,7 @@ export default {
                     }
                 },{
                     label: "Select All/None",
+                    icon: 'list',
                     accelerator: "CmdOrCtrl+A",
                     click: () => {
                         if (!this.$refs.thumbs) return;
@@ -100,7 +107,31 @@ export default {
                     }
                 },
                 {
+                    label: "Delete",
+                    icon: 'trash alternate outline',
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    accelerator: "CmdOrCtrl+D",
+                    click: () => {
+                        this.$emit("deleteFile");
+                    }
+                },
+                {
+                    label: "Move",
+                    icon: 'copy outline',
+                    isVisible: () => { return this.selectedFiles.length == 1; },
+                    accelerator: "CmdOrCtrl+M",
+                    click: () => {
+                        this.$emit("moveFile");
+                    }
+                },
+                {
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    type: 'separator'
+                },
+                {
                     label: "Properties",
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    icon: 'info circle',
                     accelerator: "CmdOrCtrl+P",
                     click: () => {
                         this.$emit("openProperties");

@@ -1,9 +1,10 @@
 <template>
 <div class="ui dropdown item" :style="[styleObj, {visibility: open ? 'visible' : 'hidden'}]">
     <div class="menu">
-        <template v-for="item in items">
+        <template v-for="item in visibleItems">
             <div v-if="item.type === 'separator'" class="divider" />
             <div v-else class="item" @click="handleClick(item)">
+                <i v-if="item.icon != null" style="margin-right: 0.5rem" class="icon" v-bind:class="item.icon"></i>
                 {{ item.label }}
             </div>
         </template>
@@ -51,6 +52,12 @@ export default {
     Keyboard.offKeyDown(this.handleKeyDown);
 
     contextMenus = contextMenus.filter(cm => cm !== this);
+  },
+
+  computed: {
+      visibleItems: function() {
+          return this.items.filter(itm => typeof(itm.isVisible) === 'undefined' || itm.isVisible());
+      }
   },
 
   methods: {
