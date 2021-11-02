@@ -18,21 +18,22 @@
         </div>
         <div class="ui divider"></div>
     </div>
-    <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
-    <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path"  draggable
-                @dragstart="startDrag($event, f)"
-                @drop="onDrop($event, f)"
-                @dragover.prevent
-                @dragenter.prevent>
-        <Thumbnail 
-        :file="f"         
-        :data-idx="idx" 
-        ref="thumbs" 
-        @clicked="handleSelection" 
-        @open="handleOpen"
-        :lazyLoad="true"                
-            />    
-    </div>    
+    <div ref="explorer" id="explorer" @click="onClick" :class="{loading, dropping}" @scroll="onScroll" @drop="explorerDropHandler($event)" @dragleave="explorerDragLeave($event)" @dragenter="explorerDragEnter($event)" @dragover.prevent>
+        <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path" draggable
+                    @dragstart="startDrag($event, f)"
+                    @drop="onDrop($event, f)"
+                    @dragenter.prevent
+                    @dragover.prevent                
+                    >
+            <Thumbnail 
+            :file="f"         
+            :data-idx="idx" 
+            ref="thumbs" 
+            @clicked="handleSelection" 
+            @open="handleOpen"
+            :lazyLoad="true"                
+                />    
+        </div>    
     </div>    
 </div>
 </template>
@@ -43,6 +44,7 @@ import Toolbar from 'commonui/components/Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { clone } from 'commonui/classes/utils';
+import Window from 'commonui/components/Window.vue';
 
 import ddb from 'ddb';
 const { pathutils } = ddb;
@@ -54,7 +56,7 @@ import ContextMenu from 'commonui/components/ContextMenu';
 
 export default {
     components: {
-        Thumbnail, Toolbar, ContextMenu
+        Thumbnail, Toolbar, ContextMenu, Window
     },
     props: ['files', 'currentPath', 'tools'],
     data: function () {
@@ -63,6 +65,8 @@ export default {
         if (env.isElectron()){
             contextMenu = contextMenu.concat([{
                         label: "Open Item Location",
+                        icon: 'open folder outline', 
+                        isVisible: () => { return this.selectedFiles.length > 0; },
                         click: () => {
                             if (this.selectedFiles.length > 0) shell.showItemInFolder(this.selectedFiles[0].path);
                         },
@@ -71,7 +75,9 @@ export default {
                         type: 'separator'
                     },{
                         label: "Share",
+                        icon: 'share alternate',
                         accelerator: "CmdOrCtrl+S",
+                        isVisible: () => { return this.selectedFiles.length > 0; },
                         click: () => {
                             if (this.selectedFiles.length > 0) dispatchEvent(new Event("btnShare_Click"));
                         }
@@ -82,6 +88,8 @@ export default {
 
         contextMenu = contextMenu.concat([{
                     label: 'Open Item',
+                    icon: 'share',
+                    isVisible: () => { return this.selectedFiles.length > 0; },
                     click: () => {
                         this.selectedFiles.forEach(f => {
                             this.$emit('openItem', f);
@@ -89,6 +97,7 @@ export default {
                     }
                 },{
                     label: "Select All/None",
+                    icon: 'list',
                     accelerator: "CmdOrCtrl+A",
                     click: () => {
                         if (!this.$refs.thumbs) return;
@@ -101,16 +110,42 @@ export default {
                 },
                 {
                     label: "Properties",
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    icon: 'info circle',
                     accelerator: "CmdOrCtrl+P",
                     click: () => {
                         this.$emit("openProperties");
                     }
-                }]);
+                },
+                {
+                    label: "Rename",
+                    icon: 'pencil alternate',
+                    isVisible: () => { return this.selectedFiles.length == 1; },
+                    accelerator: "CmdOrCtrl+M",
+                    click: () => {
+                        this.$emit("moveSelectedItems");
+                    }
+                },
+                {
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    type: 'separator'
+                },
+                {
+                    label: "Delete",
+                    icon: 'trash alternate outline',
+                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    accelerator: "CmdOrCtrl+D",
+                    click: () => {
+                        this.$emit("deleteSelecteditems");
+                    }
+                }
+                ]);
 
         return {
             filter: null,
             loading: false,
-            contextMenu
+            dropping: false,
+            contextMenu,
         };
     },
     computed: {
@@ -154,6 +189,50 @@ export default {
     },
     methods: {
 
+        explorerDragEnter: function(evt) {
+            //evt.preventDefault();
+            console.log("Enter", evt);
+            this.dropping = true;
+        },
+
+        explorerDragLeave: function(evt) {
+            //evt.preventDefault();
+            console.log("Leave");
+            this.dropping = false;
+
+        },
+
+        getFiles: function(ev) {
+            var files = [];
+
+            if (ev.dataTransfer.items) {
+                // Use DataTransferItemList interface to access the file(s)
+                for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                    // If dropped items aren't files, reject them
+                    if (ev.dataTransfer.items[i].kind === 'file') {
+                        var file = ev.dataTransfer.items[i].getAsFile();
+                        files.push(file);
+                    }
+                }
+            } else {
+                files = ev.dataTransfer.files;
+            }
+
+            return files;
+        },
+
+        explorerDropHandler: function(ev) {
+            ev.preventDefault();
+
+            this.dropping = false;
+
+            var files = this.getFiles(ev);
+            if (files.length == 0) return;
+
+            this.$root.$emit('uploadItems', { files: files, path: this.currentPath});
+            
+        },
+
         goTo: function(itm) {
             this.$root.$emit("folderOpened", pathutils.getTree(itm.path));
             //console.log(path);
@@ -168,10 +247,11 @@ export default {
 
         onDrop (evt, item) {
                             
+            this.dropping = false;
+
             if (entry.isDirectory(item.entry)) {   
                 const destFolder = item.entry.path;
                 const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
-                
                 this.drop(sourceItem, destFolder);
 
                 this.selectedFiles.forEach(selItem => {
@@ -327,6 +407,12 @@ export default {
     &.loading {
         opacity: 0.5;
         pointer-events: none;
+    }
+    
+    &.dropping {
+        background-color: #EFEFEF;
+        box-shadow: inset 0em 0em 5px 2px grey;
+        cursor: copy;
     }
 }
 

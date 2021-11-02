@@ -43,6 +43,10 @@ export default {
         if (env.isElectron()){
             contextMenu = contextMenu.concat([{
                     label: "Open Item Location",
+                    icon: 'open folder outline', 
+                    isVisible: () => {
+                        return this.lastSelectedNode !== null;
+                    },
                     click: () => {
                         if (this.lastSelectedNode !== null) shell.showItemInFolder(this.lastSelectedNode.node.path);
                     }
@@ -54,18 +58,51 @@ export default {
 
         contextMenu = contextMenu.concat([{
                 label: 'Open Item',
+                icon: 'share',
+                isVisible: () => { return this.lastSelectedNode !== null; },
                 click: () => {
                     if (this.lastSelectedNode !== null) this.$emit('openItem', this.lastSelectedNode.node);
                 }
-            },{
+            },
+            {
                 label: 'Properties',
+                icon: 'info circle',
+                isVisible: () => { return this.lastSelectedNode !== null; },
                 click: () => {
                     if (this.lastSelectedNode !== null) {
                         this.$emit('selectionChanged', [this.lastSelectedNode.node]);
                         this.$emit("openProperties");
                     }
                 }
-            }
+            },
+            {
+                label: "Rename",
+                icon: 'pencil alternate',
+                isVisible: () => { return this.lastSelectedNode !== null; },
+                accelerator: "CmdOrCtrl+M",
+                click: () => {
+                    if (this.lastSelectedNode !== null) {
+                        this.$emit('selectionChanged', [this.lastSelectedNode.node]);
+                        this.$emit("moveSelectedItems");
+                    }
+                }
+            },
+            {
+                type: 'separator',
+                isVisible: () => { return this.lastSelectedNode !== null; },
+            },
+            {
+                label: "Delete",
+                icon: 'trash alternate outline',
+                accelerator: "CmdOrCtrl+D",
+                isVisible: () => { return this.lastSelectedNode !== null; },
+                click: () => {
+                    if (this.lastSelectedNode !== null) {
+                        this.$emit('selectionChanged', [this.lastSelectedNode.node]);
+                        this.$emit("deleteSelecteditems");
+                    }
+                }
+            },
         ]);
 
         return {
