@@ -18,21 +18,22 @@
         </div>
         <div class="ui divider"></div>
     </div>
-    <div ref="explorer" id="explorer" @click="onClick" :class="{loading}" @scroll="onScroll">
-    <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path"  draggable
-                @dragstart="startDrag($event, f)"
-                @drop="onDrop($event, f)"
-                @dragover.prevent
-                @dragenter.prevent>
-        <Thumbnail 
-        :file="f"         
-        :data-idx="idx" 
-        ref="thumbs" 
-        @clicked="handleSelection" 
-        @open="handleOpen"
-        :lazyLoad="true"                
-            />    
-    </div>    
+    <div ref="explorer" id="explorer" @click="onClick" :class="{loading, dropping}" @scroll="onScroll" @drop="explorerDropHandler($event)" @dragleave="explorerDragLeave($event)" @dragenter="explorerDragEnter($event)" @dragover.prevent>
+        <div v-for="(f, idx) in filterFiles" :key="'E,' + f.path" draggable
+                    @dragstart="startDrag($event, f)"
+                    @drop="onDrop($event, f)"
+                    @dragenter.prevent
+                    @dragover.prevent                
+                    >
+            <Thumbnail 
+            :file="f"         
+            :data-idx="idx" 
+            ref="thumbs" 
+            @clicked="handleSelection" 
+            @open="handleOpen"
+            :lazyLoad="true"                
+                />    
+        </div>    
     </div>    
 </div>
 </template>
@@ -43,6 +44,7 @@ import Toolbar from 'commonui/components/Toolbar.vue';
 import Keyboard from '../keyboard';
 import Mouse from '../mouse';
 import { clone } from 'commonui/classes/utils';
+import Window from 'commonui/components/Window.vue';
 
 import ddb from 'ddb';
 const { pathutils } = ddb;
@@ -54,7 +56,7 @@ import ContextMenu from 'commonui/components/ContextMenu';
 
 export default {
     components: {
-        Thumbnail, Toolbar, ContextMenu
+        Thumbnail, Toolbar, ContextMenu, Window
     },
     props: ['files', 'currentPath', 'tools'],
     data: function () {
@@ -142,7 +144,8 @@ export default {
         return {
             filter: null,
             loading: false,
-            contextMenu
+            dropping: false,
+            contextMenu,
         };
     },
     watch: { 
@@ -191,6 +194,50 @@ export default {
     },
     methods: {
 
+        explorerDragEnter: function(evt) {
+            //evt.preventDefault();
+            console.log("Enter", evt);
+            this.dropping = true;
+        },
+
+        explorerDragLeave: function(evt) {
+            //evt.preventDefault();
+            console.log("Leave");
+            this.dropping = false;
+
+        },
+
+        getFiles: function(ev) {
+            var files = [];
+
+            if (ev.dataTransfer.items) {
+                // Use DataTransferItemList interface to access the file(s)
+                for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                    // If dropped items aren't files, reject them
+                    if (ev.dataTransfer.items[i].kind === 'file') {
+                        var file = ev.dataTransfer.items[i].getAsFile();
+                        files.push(file);
+                    }
+                }
+            } else {
+                files = ev.dataTransfer.files;
+            }
+
+            return files;
+        },
+
+        explorerDropHandler: function(ev) {
+            ev.preventDefault();
+
+            this.dropping = false;
+
+            var files = this.getFiles(ev);
+            if (files.length == 0) return;
+
+            this.$root.$emit('uploadItems', { files: files, path: this.currentPath});
+            
+        },
+
         goTo: function(itm) {
             this.$root.$emit("folderOpened", pathutils.getTree(itm.path));
             //console.log(path);
@@ -205,10 +252,11 @@ export default {
 
         onDrop (evt, item) {
                             
+            this.dropping = false;
+
             if (entry.isDirectory(item.entry)) {   
                 const destFolder = item.entry.path;
                 const sourceItem = JSON.parse(evt.dataTransfer.getData('item'));
-                
                 this.drop(sourceItem, destFolder);
 
                 this.selectedFiles.forEach(selItem => {
@@ -364,6 +412,12 @@ export default {
     &.loading {
         opacity: 0.5;
         pointer-events: none;
+    }
+    
+    &.dropping {
+        background-color: #EFEFEF;
+        box-shadow: inset 0em 0em 5px 2px grey;
+        cursor: copy;
     }
 }
 
