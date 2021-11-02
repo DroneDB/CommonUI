@@ -136,6 +136,7 @@ export default {
         align-items: flex-end;
         justify-content: center;
         position: relative;
+        pointer-events: none;
         .bordered{
             box-shadow: 2px 2px 6px -2px #030A03;
         }
