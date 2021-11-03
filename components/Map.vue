@@ -167,8 +167,10 @@ export default {
                    this.reloadFileLayers();
                 }else{
                     // Just update (selection change)
-                    this.fileLayer.changed();
-                    this.updateRastersOpacity();
+                    if (typeof this.fileLayer !== 'undefined') {
+                        this.fileLayer.changed();
+                        this.updateRastersOpacity();
+                    }
                 }
             }, 5);
         }
