@@ -46,11 +46,15 @@ export default {
       buttonWidth: {
           type: String,
           default: "expand" // one of "expand", "auto"
+      },
+      selectedTab: {
+          type: String,
+          default: null
       }
   },
   data: function(){
       return {
-          activeTab: this.tabs[0].key,
+          activeTab: this.selectedTab != null ? this.selectedTab : this.tabs[0].key,
           dynTabs: clone(this.tabs)
       };
   },

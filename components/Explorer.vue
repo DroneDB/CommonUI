@@ -403,6 +403,7 @@ export default {
     padding: 8px;
     overflow-y: auto;
     user-select: none;
+    transition: all 0.25s ease;
 
     &.loading {
         opacity: 0.5;
