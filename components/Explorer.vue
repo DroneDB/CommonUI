@@ -263,7 +263,7 @@ export default {
 
         drop (sourceItem, destFolder) {
             
-            if (entry.isDirectory(sourceItem.entry) && destFolder.startsWith(sourceItem.entry.path)) {
+            if (entry.isDirectory(sourceItem.entry) && (destFolder + '/').startsWith(sourceItem.entry.path + '/')) {
                 this.$log.info("Cannot copy a folder on itself or one of its descendants");
                 return;
             }
