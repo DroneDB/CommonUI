@@ -127,13 +127,13 @@ export default {
                     }
                 },
                 {
-                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    isVisible: () => { return this.selectedFiles.length > 0  && !this.selectedFiles.find(f => f.entry.type === ddb.entry.type.DRONEDB); },
                     type: 'separator'
                 },
                 {
                     label: "Delete",
                     icon: 'trash alternate outline',
-                    isVisible: () => { return this.selectedFiles.length > 0; },
+                    isVisible: () => { return this.selectedFiles.length > 0 && !this.selectedFiles.find(f => f.entry.type === ddb.entry.type.DRONEDB); },
                     accelerator: "CmdOrCtrl+D",
                     click: () => {
                         this.$emit("deleteSelecteditems");

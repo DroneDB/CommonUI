@@ -89,13 +89,13 @@ export default {
             },
             {
                 type: 'separator',
-                isVisible: () => { return this.lastSelectedNode !== null; },
+                isVisible: () => { return this.lastSelectedNode !== null && this.lastSelectedNode.node.entry.type !== ddb.entry.type.DRONEDB; },
             },
             {
                 label: "Delete",
                 icon: 'trash alternate outline',
                 accelerator: "CmdOrCtrl+D",
-                isVisible: () => { return this.lastSelectedNode !== null; },
+                isVisible: () => { return this.lastSelectedNode !== null && this.lastSelectedNode.node.entry.type !== ddb.entry.type.DRONEDB; },
                 click: () => {
                     if (this.lastSelectedNode !== null) {
                         this.$emit('selectionChanged', [this.lastSelectedNode.node]);

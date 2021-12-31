@@ -12,7 +12,7 @@
             <i v-if="icon && !loading" class="icon icon-file " :class="icon" :style="iconStyle" />
             <i class="icon circle notch spin loading" v-if="loading || (thumbnail === null && icon === null)" />
         </div>
-        {{filename}}
+        {{label}}
     </div>
 </template>
 
@@ -40,11 +40,10 @@ export default {
       }
   },
   data: function(){
-      let filename = pathutils.basename(this.file.path);
-      if (filename === "") filename = this.file.path;
-      
+      const label = this.file.label;
+
       return {
-          filename,
+          label,
           thumbnail: null,
           icon: null,
           error: null,
